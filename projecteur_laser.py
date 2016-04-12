@@ -50,6 +50,7 @@ class window:
         interface = Gtk.Builder()
         interface.add_from_file('fenetre_projecteur.glade')
         
+        self.windowMain = interface.get_object('windowMain')
         self.windowSettings = interface.get_object('windowSettings')
         
         self.port = interface.get_object('comboPortList')
@@ -122,7 +123,7 @@ class window:
         self.windowSettings.hide()
         
     def messageErreur(self, message='', secondary=None):
-        windowMessage = Gtk.MessageDialog(None, Gtk.DialogFlags.MODAL,
+        windowMessage = Gtk.MessageDialog(self.windowMain, Gtk.DialogFlags.MODAL,
                                           Gtk.MessageType.ERROR, Gtk.ButtonsType.OK,
                                           message)
         if secondary != None:
@@ -144,5 +145,4 @@ if __name__ == "__main__":
     cfg = config()
     wm = window()
     serialInit(serialLink)
-    #serial.open()    
     Gtk.main()
