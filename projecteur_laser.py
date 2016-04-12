@@ -107,8 +107,8 @@ class window:
         try:
             serialLink.open()
         except serial.serialutil.SerialException:
-            self.messageErreur('Erreur de connexion', 'Vérifiez la connexion et/ou les paramètres de connexion')
-            print('erreur serial')
+            self.messageErreur('Erreur de connexion',
+                               'Vérifiez la connexion et/ou les paramètres de connexion')
     
     def on_menuDisconnect_activate(self, widget):
         serial.close()
