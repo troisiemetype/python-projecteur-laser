@@ -8,11 +8,12 @@ from gi.repository import Gtk
 import ConfigParser
 
 import serial
+import serial.tools.list_ports
 
-serialLink = serial.Serial()
+ser = serial.Serial()
 
 tuplBaud = (300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200)
-listPorts = []
+listPort = []
 
 #definition of the config parser class
 class config:
@@ -43,7 +44,7 @@ class config:
     def save(self):
         with open('config_copie.cfg', 'w') as configfile:
             self.config.write(configfile)
-    
+        
         
 #definition of main program window
 class window:
@@ -67,31 +68,26 @@ class window:
         self.stopbits = interface.get_object('labelStopBits')
         self.xonxoff = interface.get_object('labelXON')
         
-        #define the list of baudrates
-        #TODO: use the list that's defined at the beginning of the program instead
-        self.listBaud = Gtk.ListStore(int, str)
-        self.listBaud.append([1,"300"])
-        self.listBaud.append([2,"600"])
-        self.listBaud.append([3,"1200"])
-        self.listBaud.append([4,"2400"])
-        self.listBaud.append([5,"4800"])
-        self.listBaud.append([6,"9600"])
-        self.listBaud.append([7,"14400"])
-        self.listBaud.append([8,"19200"])
-        self.listBaud.append([9,"28800"])
-        self.listBaud.append([10,"38400"])
-        self.listBaud.append([11,"57600"])
-        self.listBaud.append([12,"115200"])
+        #construct the port list
+        self.updateListPort()
+
+        self.port.set_model(self.listPort)
+        self.cell = Gtk.CellRendererText()
+        self.port.pack_start(self.cell, True)
+        self.port.add_attribute(self.cell, 'text', 1)
+        self.port.set_active(self.activePort)
         
-        #construct the list
+        #construct the baudrate list
+        self.updateListBaudrate()
+        
+        self.baudrate.set_model(self.listBaud)
         self.cell = Gtk.CellRendererText()
         self.baudrate.pack_start(self.cell, True)
-        self.baudrate.add_attribute(self.cell, 'text', 1)
+        self.baudrate.add_attribute(self.cell, 'text', 0)
+        self.baudrate.set_active(self.activeBaudrate)
         
-        #self.baudrate.set_active(item)
         
         #populates the settings menu with values from settings file
-        self.baudrate.set_model(self.listBaud)
         self.databits.set_text(str(cfg.databits))
         self.parity.set_text(cfg.parity)
         self.stopbits.set_text(str(cfg.stopbits))
@@ -99,7 +95,30 @@ class window:
         
         #Connect signals from interface (mostly buttons clicks)
         interface.connect_signals(self)
-        
+    
+    #defines/update the list of available ports
+    def updateListPort(self):
+        lp = serialGetPorts()
+        self.listPort = Gtk.ListStore(int, str)
+        self.activePort = 0
+        i = 0
+        for port in lp:
+            self.listPort.append([i, port])
+            if cfg.port == port:
+                self.activePort = i
+            i += 1
+    
+    #defines/update the list of availables baudrates
+    def updateListBaudrate(self):
+        self.listBaud = Gtk.ListStore(int)
+        self.activeBaudrate = 0
+        i = 0
+        for baudrate in tuplBaud:
+            self.listBaud.append([baudrate])
+            if cfg.baudrate == baudrate:
+                self.activeBaudrate = i
+            i += 1
+            
     #Defines the close/quit function for the main window
     def on_mainWindow_destroy(self, widget):
         Gtk.main_quit()
@@ -124,7 +143,7 @@ class window:
     def on_menuConnect_activate(self, widget):
         #try to connect to the board
         try:
-            serialLink.open()
+            ser.open()
         #else catch an exception and display an error message
         except serial.SerialException:
             self.messageErreur('Erreur de connexion',
@@ -132,7 +151,11 @@ class window:
     
     #defines the function for menu/serial/disconnect
     def on_menuDisconnect_activate(self, widget):
-        serial.close()
+        ser.close()
+    
+    #defines the function for updating port list
+    def on_buttonScan_clicked(self, widget):
+        self.updateListPort()
             
     #defines the function for validating settings
     def on_settingsOK_clicked(self, widget):
@@ -164,14 +187,20 @@ def serialInit(serial):
     serial.timeout = 1
 
 #get a list of the available ports. don't know yet if it's faisible
-def serialGetPorts(serial):
-    pass
+def serialGetPorts():
+    listPortInfo = serial.tools.list_ports.comports()
+    listPort = []
+    for tup in listPortInfo:
+        listPort.append(tup[0])
+    return listPort
+
 
 #instanciates the config and window objects.
 #call the serial initialisation function
 #display the GUI
 if __name__ == "__main__":
     cfg = config()
+    serialInit(ser)
     wm = window()
-    serialInit(serialLink)
+    serialInit(ser)
     Gtk.main()
