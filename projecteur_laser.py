@@ -10,10 +10,13 @@ import ConfigParser
 import serial
 import serial.tools.list_ports
 
+from PIL import Image
+
+im = Image
+
 ser = serial.Serial()
 
 tuplBaud = (300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200)
-listPort = []
 
 #definition of the config parser class
 class config:
@@ -59,6 +62,7 @@ class window:
         #attach the main and settings window to their program objects
         self.windowMain = interface.get_object('windowMain')
         self.windowSettings = interface.get_object('windowSettings')
+        self.windowFile = interface.get_object('windowFile')
         self.statusbar = interface.get_object('statusbar1')
         
         #Attach the interface objects to their program objects
@@ -129,7 +133,7 @@ class window:
     
     #defines the function for opening file
     def on_open(self, widget):
-        pass
+        self.windowFile.show()
     
     #defines the function for closing file
     def on_close(self, widget):
@@ -173,7 +177,14 @@ class window:
    #defines the function for updating port list
     def on_buttonScan_clicked(self, widget):
         self.updateListPort()
-            
+    
+    #defines a function that stop delete events to don't kill the object
+    #needed as without it, closing the window from the cross or using "escape"
+    #will kill the object, and so it won't be reachable at next call
+    def on_delete_event(self, widget, event):
+        widget.hide()
+        return True
+    
     #defines the function for validating settings
     def on_settingsOK_clicked(self, widget):
         cfg.save()
@@ -182,7 +193,20 @@ class window:
     #defines the function for cancelling settings
     def on_settingsCancel_clicked(self, widget):
         self.windowSettings.hide()
+    
+    #defines the function for validating opening file
+    def on_fileOK_clicked(self, widget):
+        if openFile(self.windowFile.get_filename()):
+            self.windowFile.hide()
+    
+    #defines the function for cancelling openning file
+    def on_fileCancel_clicked(self, widget):
+        self.windowFile.hide()
         
+    def on_dialog_close(self, widget):
+        self.windowFile.hide()
+        self.status('closed with escape')
+    
     #defines the basic error message
     def messageErreur(self, message='', secondary=None):
         windowMessage = Gtk.MessageDialog(self.windowMain, Gtk.DialogFlags.MODAL,
@@ -216,6 +240,17 @@ def serialGetPorts():
         listPort.append(tup[0])
     return listPort
 
+#This function deals with openning a new file
+def openFile(uri):
+    try:
+        im.open(uri)
+    except IOError:
+        wm.messageErreur('Veuillez choisir un fichier image',
+                         'Fichiers pris en charge: bmp, jpg, png, tiff, svg')
+        return False
+    wm.status('open %s' %uri)    
+    return True
+    
 
 #instanciates the config and window objects.
 #call the serial initialisation function
