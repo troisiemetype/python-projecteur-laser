@@ -12,7 +12,8 @@ import serial.tools.list_ports
 
 from PIL import Image
 
-im = Image
+im = Image.new('RGB', (20,20))
+#thumbnail = Image
 
 ser = serial.Serial()
 
@@ -64,6 +65,9 @@ class window:
         self.windowSettings = interface.get_object('windowSettings')
         self.windowFile = interface.get_object('windowFile')
         self.statusbar = interface.get_object('statusbar1')
+        
+        #attach the interface area to their program objects
+        self.image = interface.get_object('image1')
         
         #Attach the interface objects to their program objects
         self.port = interface.get_object('comboPortList')
@@ -243,12 +247,14 @@ def serialGetPorts():
 #This function deals with openning a new file
 def openFile(uri):
     try:
-        im.open(uri)
+        im = Image.open(uri)
     except IOError:
         wm.messageErreur('Veuillez choisir un fichier image',
                          'Fichiers pris en charge: bmp, jpg, png, tiff, svg')
         return False
-    wm.status('open %s' %uri)    
+    wm.status('open %s' %uri)
+    im.load()
+    #wm.image.set_from_file(uri)
     return True
     
 
