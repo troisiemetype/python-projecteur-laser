@@ -59,8 +59,9 @@ class window:
         #attach the main and settings window to their program objects
         self.windowMain = interface.get_object('windowMain')
         self.windowSettings = interface.get_object('windowSettings')
+        self.statusbar = interface.get_object('statusbar1')
         
-        #Attach the interface objects to thier program objects
+        #Attach the interface objects to their program objects
         self.port = interface.get_object('comboPortList')
         self.baudrate = interface.get_object('comboBaudRate')
         self.databits = interface.get_object('labelDataBits')
@@ -93,6 +94,9 @@ class window:
         self.stopbits.set_text(str(cfg.stopbits))
         self.xonxoff.set_text(str(cfg.xonxoff))
         
+        #creates a context id for the status bar
+        self.context_id = self.statusbar.get_context_id('status')
+        
         #Connect signals from interface (mostly buttons clicks)
         interface.connect_signals(self)
     
@@ -120,40 +124,53 @@ class window:
             i += 1
             
     #Defines the close/quit function for the main window
-    def on_mainWindow_destroy(self, widget):
+    def on_quit(self, widget):
         Gtk.main_quit()
     
-    #defines the function when quitting from menu/file/quit
-    def on_menuQuit_activate(self, widget):
-        Gtk.main_quit()
-    
-    #defines the function for menu/file/open
-    def on_menuOpen_activate(self, widget):
+    #defines the function for opening file
+    def on_open(self, widget):
         pass
     
-    #defines the function for menu/file/close
-    def on_menuClose_activate(self, widget):
+    #defines the function for closing file
+    def on_close(self, widget):
         pass
     
-    #defines the function for menu/edit/pref
-    def on_menuSettings_activate(self, widget):
+    #defines the function for preferences
+    def on_settings(self, widget):
         self.windowSettings.show()
     
-    #defines the function for menu/serial/connect
-    def on_menuConnect_activate(self, widget):
+    #defines the function for connect
+    def on_connect(self, widget):
         #try to connect to the board
+        if ser.isOpen():
+            self.messageErreur('Vous êtes déjà connecté')
+            return
         try:
             ser.open()
+            self.status('Connecté à %s' %ser.port)
         #else catch an exception and display an error message
         except serial.SerialException:
             self.messageErreur('Erreur de connexion',
                                'Vérifiez la connexion et/ou les paramètres de connexion')
     
-    #defines the function for menu/serial/disconnect
-    def on_menuDisconnect_activate(self, widget):
+    #defines the function for disconnect
+    def on_disconnect(self, widget):
         ser.close()
+        self.status('deconnecté')
     
-    #defines the function for updating port list
+    #defines the function for sending data
+    def on_send(self, widget):
+        pass
+    
+    #defines the fnuction for pausing data
+    def on_pause(self, widget):
+        pass
+    
+    #defines the function for stopping data
+    def on_stop(self, widget):
+        pass
+   
+   #defines the function for updating port list
     def on_buttonScan_clicked(self, widget):
         self.updateListPort()
             
@@ -175,6 +192,11 @@ class window:
             windowMessage.format_secondary_text(secondary)
         windowMessage.run()
         windowMessage.destroy()
+    
+    #defines the status update
+    def status(self, status):
+        self.statusbar.push(self.context_id, status)
+        
 
 #init the serial link with the values copied from the config file
 def serialInit(serial):
@@ -203,4 +225,5 @@ if __name__ == "__main__":
     serialInit(ser)
     wm = window()
     serialInit(ser)
+    wm.status('Initialisation réussie')
     Gtk.main()

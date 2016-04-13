@@ -7,9 +7,9 @@
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">G-code terminal</property>
     <property name="window_position">center</property>
-    <property name="default_width">171</property>
-    <property name="default_height">273</property>
-    <signal name="destroy" handler="on_mainWindow_destroy" swapped="no"/>
+    <property name="default_width">450</property>
+    <property name="default_height">300</property>
+    <signal name="destroy" handler="on_quit" swapped="no"/>
     <child>
       <object class="GtkBox" id="box1">
         <property name="visible">True</property>
@@ -37,7 +37,7 @@
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                        <signal name="activate" handler="on_menuOpen_activate" swapped="no"/>
+                        <signal name="activate" handler="on_open" swapped="no"/>
                       </object>
                     </child>
                     <child>
@@ -47,6 +47,7 @@
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
+                        <signal name="activate" handler="on_close" swapped="no"/>
                       </object>
                     </child>
                     <child>
@@ -62,7 +63,7 @@
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                        <signal name="activate" handler="on_menuQuit_activate" swapped="no"/>
+                        <signal name="activate" handler="on_quit" swapped="no"/>
                       </object>
                     </child>
                   </object>
@@ -128,7 +129,7 @@
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                        <signal name="activate" handler="on_menuSettings_activate" swapped="no"/>
+                        <signal name="activate" handler="on_settings" swapped="no"/>
                       </object>
                     </child>
                   </object>
@@ -152,7 +153,7 @@
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                        <signal name="activate" handler="on_menuConnect_activate" swapped="no"/>
+                        <signal name="activate" handler="on_connect" swapped="no"/>
                       </object>
                     </child>
                     <child>
@@ -162,7 +163,7 @@
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                        <signal name="activate" handler="on_menuDisconnect_activate" swapped="no"/>
+                        <signal name="activate" handler="on_disconnect" swapped="no"/>
                       </object>
                     </child>
                   </object>
@@ -212,6 +213,128 @@
           <object class="GtkToolbar" id="toolbar1">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="hexpand">True</property>
+            <property name="show_arrow">False</property>
+            <child>
+              <object class="GtkToolButton" id="toolOpen">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Ouvrir un fichier image</property>
+                <property name="label" translatable="yes">_Ouvrir</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-open</property>
+                <signal name="clicked" handler="on_open" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="toolClose">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Fermer le fichier image</property>
+                <property name="label" translatable="yes">Fermer</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-close</property>
+                <signal name="clicked" handler="on_close" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="toolSettings">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Afficher les préférences</property>
+                <property name="label" translatable="yes">Préférences</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-preferences</property>
+                <signal name="clicked" handler="on_settings" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="toolConnect">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Se connecter au projecteur</property>
+                <property name="label" translatable="yes">Connecter</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-connect</property>
+                <signal name="clicked" handler="on_connect" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="toolDisconnect">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Se déconnecter du projecteur</property>
+                <property name="label" translatable="yes">déconnecter</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-disconnect</property>
+                <signal name="clicked" handler="on_disconnect" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="toolSend">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Envoyer les données</property>
+                <property name="label" translatable="yes">Envoyer le fichier</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-media-play</property>
+                <signal name="clicked" handler="on_send" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="toolPause">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Mettre en pause l'envoi des données</property>
+                <property name="label" translatable="yes">Mettre en pause</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-media-pause</property>
+                <signal name="clicked" handler="on_pause" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="toolStop">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Arrêter l'envoi des données</property>
+                <property name="label" translatable="yes">Arrêter</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-media-stop</property>
+                <signal name="clicked" handler="on_stop" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -395,12 +518,16 @@
             <property name="margin_right">10</property>
             <property name="margin_top">6</property>
             <property name="margin_bottom">6</property>
-            <property name="orientation">vertical</property>
+            <property name="border_width">1</property>
             <property name="spacing">2</property>
+            <child>
+              <placeholder/>
+            </child>
           </object>
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
+            <property name="pack_type">end</property>
             <property name="position">3</property>
           </packing>
         </child>
