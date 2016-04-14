@@ -1,5 +1,6 @@
 from PIL import Image
 
+
 import array
 
 from gi.repository import GdkPixbuf

@@ -28,5 +28,5 @@ class SerialLink(serial.Serial):
         return list_port
     #This returns a list of the baudrates available (for the settings menu construction)
     def get_baudrates(self):
-        tuplBaud = (300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200)
-        return tuplBaud
+        tupl_baud = (300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200)
+        return tupl_baud

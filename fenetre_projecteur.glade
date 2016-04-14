@@ -11,8 +11,8 @@
     <property name="window_position">center</property>
     <property name="type_hint">dialog</property>
     <signal name="delete-event" handler="on_delete_event" swapped="no"/>
-    <signal name="delete-event" handler="on_fileCancel_clicked" swapped="no"/>
-    <signal name="key-press-event" handler="on_windowFile_key_press_event" swapped="no"/>
+    <signal name="delete-event" handler="on_file_cancel_clicked" swapped="no"/>
+    <signal name="key-press-event" handler="on_window_file_key_press_event" swapped="no"/>
     <child internal-child="vbox">
       <object class="GtkBox" id="filechooserdialog-vbox1">
         <property name="can_focus">False</property>
@@ -23,13 +23,13 @@
             <property name="can_focus">False</property>
             <property name="layout_style">end</property>
             <child>
-              <object class="GtkButton" id="fileCancel">
+              <object class="GtkButton" id="file_cancel">
                 <property name="label">gtk-cancel</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_stock">True</property>
-                <signal name="clicked" handler="on_fileCancel_clicked" swapped="no"/>
+                <signal name="clicked" handler="on_file_cancel_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -38,13 +38,13 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="fileOK">
+              <object class="GtkButton" id="file_ok">
                 <property name="label">gtk-ok</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_stock">True</property>
-                <signal name="clicked" handler="on_fileOK_clicked" swapped="no"/>
+                <signal name="clicked" handler="on_file_ok_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -665,7 +665,7 @@
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_stock">True</property>
-                <signal name="clicked" handler="on_settingsCancel_clicked" swapped="no"/>
+                <signal name="clicked" handler="on_settings_cancel_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -680,7 +680,7 @@
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_stock">True</property>
-                <signal name="clicked" handler="on_settingsOK_clicked" swapped="no"/>
+                <signal name="clicked" handler="on_settings_ok_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -883,7 +883,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <signal name="clicked" handler="on_buttonScan_clicked" swapped="no"/>
+                    <signal name="clicked" handler="on_button_scan_clicked" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
