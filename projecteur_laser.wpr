@@ -4,9 +4,9 @@
 # Wing IDE project file                                          #
 ##################################################################
 [project attributes]
-proj.file-list = [loc('configuration.py'),
-                  loc('image.py'),
-                  loc('projecteur_laser.py'),
-                  loc('serial.py'),
-                  loc('window.py')]
+proj.file-list = [loc('projecteur_laser.py'),
+                  loc('p_configuration.py'),
+                  loc('p_image.py'),
+                  loc('p_serial.py'),
+                  loc('p_window.py')]
 proj.file-type = 'shared'
