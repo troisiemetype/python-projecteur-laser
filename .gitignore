@@ -1,2 +1,4 @@
 *.glade~
 config_copie.cfg
+*.pyc
+*.wpu

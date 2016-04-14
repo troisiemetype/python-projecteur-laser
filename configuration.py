@@ -16,9 +16,9 @@ class Configuration:
         self.port = self.config.get('serial','port')
         self.baudrate = self.config.getint('serial','baudrate')
         self.databits = self.config.getint('serial', 'databits')
-        self.parity = self.config.get ('serial', 'parity')
+        self.parity = self.config.get('serial', 'parity')
         self.stopbits = self.config.getint('serial', 'stopbits')
-        
+        self.timeout = self.config.get('serial', 'timeout')
         self.xonxoff = self.config.getboolean('serial', 'flowcontrolxon')
         
         #image attributes
@@ -30,7 +30,7 @@ class Configuration:
     #getter for serial cfg
     def get_serial_cfg(self):
         cfg_tupl = (self.port, self.baudrate, self.databits,
-                    self.parity, self.stopbits, self.xonxoff)
+                    self.parity, self.stopbits, self.timeout, self.xonxoff)
         return cfg_tupl
     
     #definition of the save function

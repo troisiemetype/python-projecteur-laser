@@ -8,7 +8,7 @@ import configuration
 #display the GUI
 if __name__ == "__main__":
     default_cfg = configuration.Configuration('config_default.cfg')
-    print(default_cfg)
+    print(default_cfg.get_serial_cfg())
     #serialInit(ser)
     #wm = Window()
     #serialInit(ser)
