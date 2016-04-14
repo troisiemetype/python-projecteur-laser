@@ -12,7 +12,12 @@ import serial.tools.list_ports
 
 from PIL import Image
 
-im = Image
+import array
+from gi.repository import GdkPixbuf
+from gi.repository import Gdk
+
+im = Image.new('RGB', (20,20))
+#thumbnail = Image
 
 ser = serial.Serial()
 
@@ -64,6 +69,9 @@ class window:
         self.windowSettings = interface.get_object('windowSettings')
         self.windowFile = interface.get_object('windowFile')
         self.statusbar = interface.get_object('statusbar1')
+        
+        #attach the interface area to their program objects
+        self.image = interface.get_object('image1')
         
         #Attach the interface objects to their program objects
         self.port = interface.get_object('comboPortList')
@@ -137,7 +145,10 @@ class window:
     
     #defines the function for closing file
     def on_close(self, widget):
-        pass
+        rep = self.messageValidation('Fermer l\'image?', 'Tous les réglages seront perdus')
+        print(rep)
+        if rep == -5:
+            closeFile()
     
     #defines the function for preferences
     def on_settings(self, widget):
@@ -202,6 +213,10 @@ class window:
     #defines the function for cancelling openning file
     def on_fileCancel_clicked(self, widget):
         self.windowFile.hide()
+    
+    def on_windowFile_key_press_event(self, widget, event):
+        if event.keyval == Gdk.KEY_Return:
+            self.on_fileOK_clicked(widget)
         
     def on_dialog_close(self, widget):
         self.windowFile.hide()
@@ -217,6 +232,16 @@ class window:
         windowMessage.run()
         windowMessage.destroy()
     
+    def messageValidation(self, message='', secondary=None):
+        windowValidation = Gtk.MessageDialog(self.windowMain, Gtk.DialogFlags.MODAL,
+                                             Gtk.MessageType.INFO, Gtk.ButtonsType.OK_CANCEL,
+                                             message)
+        if secondary != None:
+            windowValidation.format_secondary_text(secondary)
+        rep = windowValidation.run()
+        windowValidation.destroy()
+        return rep
+            
     #defines the status update
     def status(self, status):
         self.statusbar.push(self.context_id, status)
@@ -242,14 +267,45 @@ def serialGetPorts():
 
 #This function deals with openning a new file
 def openFile(uri):
+    #try to open the file, else give an Error message
     try:
-        im.open(uri)
+        im = Image.open(uri)
     except IOError:
         wm.messageErreur('Veuillez choisir un fichier image',
                          'Fichiers pris en charge: bmp, jpg, png, tiff, svg')
         return False
-    wm.status('open %s' %uri)    
+    #display status
+    wm.status('open %s' %uri)
+    #Load the image, get its size, create thumbnail
+    im.load()
+    w,h = im.size
+    thumb = im
+    thumb.thumbnail((450, int(450*h/w)))
+    #sets the thumbnail in the image area, through the imageToPixbuf function
+    wm.image.set_from_pixbuf(imageToPixbuf(thumb))
     return True
+
+#this function close the file that is opened
+def closeFile():
+    wm.image.set_from_icon_name(Gtk.STOCK_MISSING_IMAGE, 6)
+
+#this function converts PIL images to Pixbuf format for displaying in Gtk
+def imageToPixbuf(im):
+    #transforms the given image into an array of pixels
+    arr = array.array('B', im.tostring())
+    w,h=im.size
+    #look at a an alpha mask
+    if im.mode == 'RGBA':
+        hasAlpha = True
+        dist = w*4
+    else:
+        hasAlpha = False
+        dist = w*3
+    #returns the pix buf. Args:
+    #array, colorspace, has alpha, bits per sample,
+    #width, height, distance in bytes between row starts
+    return GdkPixbuf.Pixbuf.new_from_data(arr, GdkPixbuf.Colorspace.RGB, hasAlpha, 8, w, h, dist)
+
     
 
 #instanciates the config and window objects.
