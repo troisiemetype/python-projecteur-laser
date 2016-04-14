@@ -1,5 +1,5 @@
 
-import ConfigParser
+import configparser
 
 #definition of the config parser class
 class Configuration:
@@ -7,7 +7,7 @@ class Configuration:
     def __init__(self, cfg_file):
         #Creation of the config object
         self.cfg_file = cfg_file
-        self.config = ConfigParser.ConfigParser()
+        self.config = configparser.ConfigParser()
         self.config.read(cfg_file)
         
         #creation of an attribute for each var

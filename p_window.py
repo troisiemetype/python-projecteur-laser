@@ -89,7 +89,6 @@ class Window:
     #defines/update the list of available ports
     def update_port_list(self, list_port, port=None):
         self.list_port = Gtk.ListStore(int, str)
-        print(self.list_port)
         self.active_port = 0
         i = 0
         for port in list_port:
@@ -126,8 +125,10 @@ class Window:
     #defines the function for closing file
     def on_close(self, widget):
         answer = self.message_validation("Fermer l'image", 'Tous les reglages seront perdus')
-        if answer == -5:
-            close_file()
+        if answer == -6:
+            return
+        self.image.set_from_icon_name(Gtk.STOCK_MISSING_IMAGE, 6)
+        close_file()
     
     #defines the function for preferences
     def on_settings(self, widget):

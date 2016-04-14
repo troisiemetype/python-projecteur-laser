@@ -1,13 +1,17 @@
 from PIL import Image
 
-
+#needed for creating the Gdk image file
 import array
 
+#also needed for creating the Gdk image file
 from gi.repository import GdkPixbuf
 from gi.repository import Gdk
 
-class Image():
-    im = Image.new('RGB', (20,20))
+class ImageClass(Image):
+    #this function initiate the class
+    def __init__(self):
+        Image.__init__(self)
+        
     #This function deals with openning a new file
     def openFile(uri):
         #try to open the file, else give an Error message
