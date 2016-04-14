@@ -31,6 +31,7 @@ if __name__ == "__main__":
     #updates the port list and the baudrate list used in settings window
     wm.update_port_list(ser.get_ports(), ser.port)
     wm.update_baudrate_list(ser.get_baudrates(), ser.baudrate)
+    wm.set_serial_cfg()
     wm.status('initialisation réussie')
     
     #launch the main Gtk loop, that displays the GUI

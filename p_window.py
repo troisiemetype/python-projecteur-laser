@@ -58,7 +58,7 @@ class Window:
     #sets the cfg values from a serial object
     def set_serial_cfg(self):
         #populates the settings menu with values from settings file
-        self.databits.set_text(str(self.ser.databits))
+        self.databits.set_text(str(self.ser.bytesize))
         self.parity.set_text(self.ser.parity)
         self.stopbits.set_text(str(self.ser.stopbits))
         self.xonxoff.set_text(str(self.ser.xonxoff))
