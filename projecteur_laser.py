@@ -14,6 +14,7 @@ from PIL import Image
 
 import array
 from gi.repository import GdkPixbuf
+from gi.repository import Gdk
 
 im = Image.new('RGB', (20,20))
 #thumbnail = Image
@@ -144,7 +145,10 @@ class window:
     
     #defines the function for closing file
     def on_close(self, widget):
-        pass
+        rep = self.messageValidation('Fermer l\'image?', 'Tous les réglages seront perdus')
+        print(rep)
+        if rep == -5:
+            closeFile()
     
     #defines the function for preferences
     def on_settings(self, widget):
@@ -209,6 +213,10 @@ class window:
     #defines the function for cancelling openning file
     def on_fileCancel_clicked(self, widget):
         self.windowFile.hide()
+    
+    def on_windowFile_key_press_event(self, widget, event):
+        if event.keyval == Gdk.KEY_Return:
+            self.on_fileOK_clicked(widget)
         
     def on_dialog_close(self, widget):
         self.windowFile.hide()
@@ -224,6 +232,16 @@ class window:
         windowMessage.run()
         windowMessage.destroy()
     
+    def messageValidation(self, message='', secondary=None):
+        windowValidation = Gtk.MessageDialog(self.windowMain, Gtk.DialogFlags.MODAL,
+                                             Gtk.MessageType.INFO, Gtk.ButtonsType.OK_CANCEL,
+                                             message)
+        if secondary != None:
+            windowValidation.format_secondary_text(secondary)
+        rep = windowValidation.run()
+        windowValidation.destroy()
+        return rep
+            
     #defines the status update
     def status(self, status):
         self.statusbar.push(self.context_id, status)
@@ -266,6 +284,10 @@ def openFile(uri):
     #sets the thumbnail in the image area, through the imageToPixbuf function
     wm.image.set_from_pixbuf(imageToPixbuf(thumb))
     return True
+
+#this function close the file that is opened
+def closeFile():
+    wm.image.set_from_icon_name(Gtk.STOCK_MISSING_IMAGE, 6)
 
 #this function converts PIL images to Pixbuf format for displaying in Gtk
 def imageToPixbuf(im):
