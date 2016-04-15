@@ -27,8 +27,9 @@ class ImageClass():
         self.im.load()
         self.uri = uri
         w,h = self.im.size
+        self.ratio = float(w/h)
         self.thumb = self.im
-        self.thumb.thumbnail((450, int(450*h/w)))
+        self.thumb.thumbnail((450, int(450/self.ratio)))
         return True
     
     #this function "closes" the file that were open.
@@ -54,3 +55,4 @@ class ImageClass():
         #width, height, distance in bytes between row starts
         return GdkPixbuf.Pixbuf.new_from_data(arr, GdkPixbuf.Colorspace.RGB,
                                               hasAlpha, 8, w, h, dist)
+

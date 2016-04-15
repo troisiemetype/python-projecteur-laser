@@ -29,7 +29,7 @@ class Window:
         #attach the image area
         self.image = self.builder.get_object('image1')
         
-        #Attach the the builder objects to their program objects
+        #Attach the builder objects to their program objects
         self.port = self.builder.get_object('comboPortList')
         self.baudrate = self.builder.get_object('comboBaudRate')
         self.databits = self.builder.get_object('labelDataBits')
@@ -37,6 +37,7 @@ class Window:
         self.stopbits = self.builder.get_object('labelStopBits')
         self.xonxoff = self.builder.get_object('labelXON')
         
+        #Attach the builder entry to their program objects
         self.support_distance = self.builder.get_object('value_support_distance')
         self.support_width = self.builder.get_object('value_support_width')
         self.support_height = self.builder.get_object('value_support_height')
@@ -44,6 +45,15 @@ class Window:
         
         self.image_width = self.builder.get_object('value_image_width')
         self.image_height = self.builder.get_object('value_image_height')
+        
+        #Attach the value signals with their function
+        self.support_distance.connect('activate', self.on_support_activate, 'distance')
+        self.support_width.connect('activate', self.on_support_activate, 'support_width')
+        self.support_height.connect('activate', self.on_support_activate, 'support_height')
+        self.support_speed.connect('activate', self.on_support_activate, 'speed')
+        
+        self.image_width.connect('activate', self.on_image_activate, 'image_width')
+        self.image_height.connect('activate', self.on_image_activate, 'image_height')
         
         self.image_dimensions = self.builder.get_object('grid_image_dimensions')
 
@@ -73,13 +83,16 @@ class Window:
         self.xonxoff.set_text(str(self.ser.xonxoff))
     
     #sets the cfg values for the image
-    def set_image_cfg(self, cfg):
+    def set_cfg(self, cfg):
         self.cfg = cfg
+        
         self.support_distance.set_text(str(cfg.distance))
-        self.support_width.set_text(str(cfg.width))
-        self.support_height.set_text(str(cfg.height))
+        self.support_width.set_text(str(cfg.support_width))
+        self.support_height.set_text(str(cfg.support_height))
         self.support_speed.set_text(str(cfg.speed))
         
+        self.image_width.set_text(str(cfg.width))
+        self.image_height.set_text(str(cfg.height))
     
     #construct the port list.
     #called the first time the update_port_list() function is called
@@ -130,7 +143,26 @@ class Window:
             i += 1
         if self.baud_list_ok == 0:
             self.init_baud_list()
+    
+    #defines the funcion that records entry in the support field
+    #just calls the cfg.update_support_cfg() function, that verifies the values passed.
+    def on_support_activate(self, widget, attribute):
+        answer = self.cfg.update_support_value(attribute, int(widget.get_text()))
+        if answer != 0:
+            self.message_erreur('Valeur maximale permise: %s'%answer,
+                                "Augmentez la distance entre le projecteur et le support si vous désirez une surface d'exposition supérieure")
+        self.set_cfg(self.cfg)
+
+    #defines the funcion that records entry in the image field
+    #Just calles the cfg function, that verifies values passed.
+    def on_image_activate(self, widget, attribute):
+        answer = self.cfg.update_image_value(attribute, int(widget.get_text()), self.im.ratio)
+        if answer != 0:
+            self.message_erreur ('Valeur maximale admise: %s'%answer,
+                                 "Les dimensions de l'image ne peuvent exceder celles du support")
+        self.set_cfg(self.cfg)
             
+
     #Defines the close/quit function for the main window
     def on_quit(self, widget):
         Gtk.main_quit()
@@ -178,13 +210,25 @@ class Window:
     def on_disconnect(self, widget):
         self.ser.close()
         self.status('déconnecté')
-
+    
+    #Defines the function that launch/stops the calibration.
+    def on_calibrate_toggle(self, widget):
+        #If the button is active, then stop the calibration
+        print(widget.get_active())
+        if widget.get_active():
+            self.image_width.set_editable(False)
+            self.image_height.set_editable(False)
+        #else it's not, so start the calibration
+        else:
+            self.image_width.set_editable(True)
+            self.image_height.set_editable(True)
+            
     
     #defines the function for sending data - Empty for now
     def on_send(self, widget):
         pass
     
-    #defines the fnuction for pausing data - Empty for now
+    #defines the function for pausing data - Empty for now
     def on_pause(self, widget):
         pass
     

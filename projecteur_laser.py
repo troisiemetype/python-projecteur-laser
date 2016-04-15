@@ -36,7 +36,7 @@ if __name__ == "__main__":
     wm.update_port_list(ser.get_ports(), ser.port)
     wm.update_baudrate_list(ser.get_baudrates(), ser.baudrate)
     wm.set_serial_cfg()
-    wm.set_image_cfg(cfg)
+    wm.set_cfg(cfg)
     
     #creates the imageObject class instance
     im = p_image.ImageClass()
