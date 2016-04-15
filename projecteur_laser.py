@@ -40,6 +40,7 @@ if __name__ == "__main__":
     
     #creates the imageObject class instance
     im = p_image.ImageClass()
+    im.set_cfg(cfg)
     #and attach it to the wm object
     wm.set_image(im)
     wm.status("gestionnaire d'image créé")

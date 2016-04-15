@@ -213,16 +213,22 @@ class Window:
     
     #Defines the function that launch/stops the calibration.
     def on_calibrate_toggle(self, widget):
-        #If the button is active, then stop the calibration
-        print(widget.get_active())
+        #If the button is active, then start the calibration
         if widget.get_active():
             self.image_width.set_editable(False)
             self.image_height.set_editable(False)
-        #else it's not, so start the calibration
+            self.im.calibration = 1
+            self.im.calibrate()
+            
+        #else it's not, so stop the calibration
         else:
             self.image_width.set_editable(True)
             self.image_height.set_editable(True)
+            self.im.calibration = 0
             
+    #defines the compute fuction
+    def on_compute(self, widget):
+        pass
     
     #defines the function for sending data - Empty for now
     def on_send(self, widget):
