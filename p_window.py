@@ -43,14 +43,15 @@ class Window:
         self.support_speed = self.builder.get_object('value_support_speed')
         
         self.image_width = self.builder.get_object('value_image_width')
-        self.image_height = self.builder.get_object('value_image_height')        
+        self.image_height = self.builder.get_object('value_image_height')
+        
+        self.image_dimensions = self.builder.get_object('grid_image_dimensions')
 
         #creates a context id for the status bar
         self.context_id = self.statusbar.get_context_id('status')
         
         self.port_list_ok = 0
         self.baud_list_ok = 0
-        
         
         #Connect signals from the builder (mostly buttons clicks)
         self.builder.connect_signals(self)
@@ -115,6 +116,7 @@ class Window:
         self.port.set_model(self.list_port)
         if self.port_list_ok == 0:
             self.init_port_list()
+        self.status('Liste des ports mise à jour')
     
     #defines/update the list of availables baudrates
     def update_baudrate_list(self, tupl_baud, baudrate=9600):
@@ -138,14 +140,19 @@ class Window:
         self.window_file.show()
     
     #defines the function for closing file
+    #if self.im.im is notdefined, no image is active: return doing nothing
     #It asks if we want to close the image,
     #sets the default icon in the image area,
     #and last, call the close_file() image function
     def on_close(self, widget):
-        answer = self.message_validation("Fermer l'image", 'Tous les reglages seront perdus')
+        if self.im.im == None:
+            return
+        answer = self.message_validation("Fermer l'image", 'Tous les réglages seront perdus')
         if answer == -6:
             return
         self.image.set_from_icon_name(Gtk.STOCK_MISSING_IMAGE, 6)
+        self.image_dimensions.hide()
+        self.status('Image %s fermée'%self.im.uri)
         self.im.close_file()
     
     #defines the function for preferences
@@ -156,21 +163,21 @@ class Window:
     def on_connect(self, widget):
         #Verifies that we're not already connected
         if self.ser.isOpen():
-            self.message_erreur('Vous etes deja connecte')
+            self.message_erreur('Vous êtes déja connecté')
             return
         #try to connect to the port
         try:
             self.ser.open()
-            self.status('Connecte a %s' %self.ser.port)
+            self.status('Connecté à %s' %self.ser.port)
         #else catch an exception and display an error message
         except SerialException:
             self.message_erreur('Erreur de connexion',
-                               'Verifiez la connexion et/ou les parametres de connexion')
+                               'Vérifiez la connexion et/ou les paramètres de connexion')
         
     #defines the function for disconnect
     def on_disconnect(self, widget):
         self.ser.close()
-        self.status('deconnecte')
+        self.status('déconnecté')
 
     
     #defines the function for sending data - Empty for now
@@ -211,6 +218,8 @@ class Window:
         if self.im.open_file(self.window_file.get_filename()):
             self.window_file.hide()
             self.image.set_from_pixbuf(self.im.get_pixbuf())
+            self.image_dimensions.show()
+            self.status('Image %s ouverte'%self.im.uri)
     
     #defines the function that handles openning file
     def on_file_cancel_clicked(self, widget):
@@ -249,21 +258,3 @@ class Window:
     #defines the status update
     def status(self, status):
         self.statusbar.push(self.context_id, status)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def __init__(self):  
-    self.show_all()
-    
-

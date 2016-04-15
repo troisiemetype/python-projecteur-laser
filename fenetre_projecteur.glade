@@ -278,9 +278,8 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="hexpand">True</property>
-            <property name="show_arrow">False</property>
             <child>
-              <object class="GtkToolButton" id="toolOpen">
+              <object class="GtkToolButton" id="toolbutton_open">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Ouvrir un fichier image</property>
@@ -295,7 +294,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="toolClose">
+              <object class="GtkToolButton" id="toolbutton_close">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Fermer le fichier image</property>
@@ -320,7 +319,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="toolSettings">
+              <object class="GtkToolButton" id="toolbutton_settings">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Afficher les préférences</property>
@@ -345,7 +344,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="toolConnect">
+              <object class="GtkToolButton" id="toolbutton_connect">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Se connecter au projecteur</property>
@@ -360,7 +359,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="toolDisconnect">
+              <object class="GtkToolButton" id="toolbutton_disconnect">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Se déconnecter du projecteur</property>
@@ -385,7 +384,31 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="toolSend">
+              <object class="GtkToggleToolButton" id="toolbutton_calibrate">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Projeter le support</property>
+                <property name="label" translatable="yes">Etalonner</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-zoom-fit</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkSeparatorToolItem" id="toolbutton4">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="toolbutton_send">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Envoyer les données</property>
@@ -400,7 +423,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="toolPause">
+              <object class="GtkToolButton" id="toolbutton_pause">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Mettre en pause l'envoi des données</property>
@@ -415,7 +438,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="toolStop">
+              <object class="GtkToolButton" id="toolbutton _stop">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Arrêter l'envoi des données</property>
@@ -467,15 +490,13 @@
                 <property name="orientation">vertical</property>
                 <property name="spacing">3</property>
                 <child>
-                  <object class="GtkGrid" id="grid1">
+                  <object class="GtkGrid" id="grid_support_dimensions">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="margin_left">4</property>
-                    <property name="margin_right">10</property>
-                    <property name="margin_top">4</property>
-                    <property name="margin_bottom">4</property>
-                    <property name="row_spacing">3</property>
-                    <property name="column_spacing">3</property>
+                    <property name="halign">end</property>
+                    <property name="row_spacing">2</property>
+                    <property name="column_spacing">2</property>
+                    <property name="row_homogeneous">True</property>
                     <child>
                       <object class="GtkLabel" id="label_support_speed">
                         <property name="visible">True</property>
@@ -533,6 +554,8 @@
                       <object class="GtkEntry" id="value_support_speed">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
+                        <property name="tooltip_text" translatable="yes">millimètres/seconde
+Vitesse de balayage</property>
                         <property name="max_length">4</property>
                         <property name="input_purpose">digits</property>
                       </object>
@@ -547,6 +570,8 @@
                       <object class="GtkEntry" id="value_support_height">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
+                        <property name="tooltip_text" translatable="yes">millimètres
+Hauteur du support</property>
                         <property name="max_length">4</property>
                         <property name="input_purpose">digits</property>
                       </object>
@@ -561,6 +586,8 @@
                       <object class="GtkEntry" id="value_support_width">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
+                        <property name="tooltip_text" translatable="yes">millimètres
+Largeur du support</property>
                         <property name="max_length">4</property>
                         <property name="input_purpose">digits</property>
                       </object>
@@ -575,6 +602,8 @@
                       <object class="GtkEntry" id="value_support_distance">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
+                        <property name="tooltip_text" translatable="yes">millimètres
+Distance entre le projecteur et le support</property>
                         <property name="max_length">4</property>
                         <property name="input_purpose">digits</property>
                       </object>
@@ -598,20 +627,21 @@
                         <property name="height">1</property>
                       </packing>
                     </child>
-                    <child>
-                      <object class="GtkSeparator" id="separator1">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="margin_top">5</property>
-                        <property name="margin_bottom">3</property>
-                      </object>
-                      <packing>
-                        <property name="left_attach">0</property>
-                        <property name="top_attach">5</property>
-                        <property name="width">2</property>
-                        <property name="height">1</property>
-                      </packing>
-                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkGrid" id="grid_image_dimensions">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">end</property>
+                    <property name="row_spacing">2</property>
+                    <property name="column_spacing">2</property>
+                    <property name="row_homogeneous">True</property>
                     <child>
                       <object class="GtkLabel" id="label_image">
                         <property name="visible">True</property>
@@ -620,7 +650,7 @@
                       </object>
                       <packing>
                         <property name="left_attach">0</property>
-                        <property name="top_attach">6</property>
+                        <property name="top_attach">0</property>
                         <property name="width">2</property>
                         <property name="height">1</property>
                       </packing>
@@ -633,7 +663,7 @@
                       </object>
                       <packing>
                         <property name="left_attach">0</property>
-                        <property name="top_attach">7</property>
+                        <property name="top_attach">1</property>
                         <property name="width">1</property>
                         <property name="height">1</property>
                       </packing>
@@ -646,21 +676,7 @@
                       </object>
                       <packing>
                         <property name="left_attach">0</property>
-                        <property name="top_attach">8</property>
-                        <property name="width">1</property>
-                        <property name="height">1</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkEntry" id="value_image_width">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="max_length">4</property>
-                        <property name="input_purpose">digits</property>
-                      </object>
-                      <packing>
-                        <property name="left_attach">1</property>
-                        <property name="top_attach">7</property>
+                        <property name="top_attach">2</property>
                         <property name="width">1</property>
                         <property name="height">1</property>
                       </packing>
@@ -669,12 +685,30 @@
                       <object class="GtkEntry" id="value_image_height">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
+                        <property name="tooltip_text" translatable="yes">millimètres
+Hauteur de l'image</property>
                         <property name="max_length">4</property>
                         <property name="input_purpose">digits</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
-                        <property name="top_attach">8</property>
+                        <property name="top_attach">2</property>
+                        <property name="width">1</property>
+                        <property name="height">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkEntry" id="value_image_width">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="tooltip_text" translatable="yes">millimètres
+Largeur de l'image</property>
+                        <property name="max_length">4</property>
+                        <property name="input_purpose">digits</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="top_attach">1</property>
                         <property name="width">1</property>
                         <property name="height">1</property>
                       </packing>
@@ -683,11 +717,8 @@
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
-                    <property name="position">0</property>
+                    <property name="position">1</property>
                   </packing>
-                </child>
-                <child>
-                  <placeholder/>
                 </child>
                 <child>
                   <placeholder/>

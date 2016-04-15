@@ -10,6 +10,7 @@ from gi.repository import Gdk
 class ImageClass():
     #this function initiate the class
     def __init__(self):
+        self.uri = None
         self.im = None
         self.thumb = None
         
@@ -22,10 +23,9 @@ class ImageClass():
             self.im = Image.open(uri)
         except IOError:
             return False
-        #display status
-        #wm.status('open %s' %uri)
-        #Load the image, get its size, create thumbnail
+        #Load the image, records its uri, get its size, create thumbnail
         self.im.load()
+        self.uri = uri
         w,h = self.im.size
         self.thumb = self.im
         self.thumb.thumbnail((450, int(450*h/w)))
