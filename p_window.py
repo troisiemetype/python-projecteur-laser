@@ -75,9 +75,8 @@ class Window:
         self.port.set_active(self.active_port)
         self.port_list_ok = 1
 
-    #construct the     
+    #construct the baudrate list    
     def init_baud_list(self):
-        #construct the baudrate list
         self.baudrate.set_model(self.list_baud)
         self.cell = Gtk.CellRendererText()
         self.baudrate.pack_start(self.cell, True)
@@ -123,12 +122,15 @@ class Window:
         self.window_file.show()
     
     #defines the function for closing file
+    #It asks if we want to close the image,
+    #sets the default icon in the image area,
+    #and last, call the close_file() image function
     def on_close(self, widget):
         answer = self.message_validation("Fermer l'image", 'Tous les reglages seront perdus')
         if answer == -6:
             return
         self.image.set_from_icon_name(Gtk.STOCK_MISSING_IMAGE, 6)
-        close_file()
+        self.im.close_file()
     
     #defines the function for preferences
     def on_settings(self, widget):
@@ -190,8 +192,9 @@ class Window:
     #defines the function that handles opening file
     #TODO: look at how to link it with the file openning
     def on_file_ok_clicked(self, widget):
-        #if openFile(self.window_file.get_filename()):
+        if self.im.open_file(self.window_file.get_filename()):
             self.window_file.hide()
+            self.image.set_from_pixbuf(self.im.get_pixbuf())
     
     #defines the function that handles openning file
     def on_file_cancel_clicked(self, widget):

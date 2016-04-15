@@ -9,6 +9,7 @@ from gi.repository import Gtk
 import p_configuration
 import p_serial
 import p_window
+import p_image
 
 #instanciate classes,
 #display the GUI
@@ -33,6 +34,10 @@ if __name__ == "__main__":
     wm.update_baudrate_list(ser.get_baudrates(), ser.baudrate)
     wm.set_serial_cfg()
     wm.status('initialisation réussie')
+    
+    #creates the imageObject class instance
+    im = p_image.ImageClass()
+    wm.set_image(im)
     
     #launch the main Gtk loop, that displays the GUI
     Gtk.main()

@@ -7,42 +7,43 @@ import array
 from gi.repository import GdkPixbuf
 from gi.repository import Gdk
 
-class ImageClass(Image):
+class ImageClass():
     #this function initiate the class
     def __init__(self):
-        Image.__init__(self)
+        self.im = None
+        self.thumb = None
         
     #This function deals with openning a new file
-    def openFile(uri):
+    #it tries to open the file that URI points on, gives false if it can't
+    #Then computes the thumbnail so that it can be used when needed
+    def open_file(self, uri):
         #try to open the file, else give an Error message
         try:
-            im = Image.open(uri)
+            self.im = Image.open(uri)
         except IOError:
-            wm.messageErreur('Veuillez choisir un fichier image',
-                             'Fichiers pris en charge: bmp, jpg, png, tiff, svg')
             return False
         #display status
-        wm.status('open %s' %uri)
+        #wm.status('open %s' %uri)
         #Load the image, get its size, create thumbnail
-        im.load()
-        w,h = im.size
-        thumb = im
-        thumb.thumbnail((450, int(450*h/w)))
-        #sets the thumbnail in the image area, through the imageToPixbuf function
-        wm.image.set_from_pixbuf(imageToPixbuf(thumb))
+        self.im.load()
+        w,h = self.im.size
+        self.thumb = self.im
+        self.thumb.thumbnail((450, int(450*h/w)))
         return True
     
-    #this function close the file that is opened
-    def closeFile():
-        wm.image.set_from_icon_name(Gtk.STOCK_MISSING_IMAGE, 6)
+    #this function "closes" the file that were open.
+    #It just clears the im and thumb images.
+    def close_file(self):
+        self.im = None
+        self.thumb = None
     
     #this function converts PIL images to Pixbuf format for displaying in Gtk
-    def imageToPixbuf(im):
+    def get_pixbuf(self):
         #transforms the given image into an array of pixels
-        arr = array.array('B', im.tostring())
-        w,h=im.size
+        arr = array.array('B', self.im.tobytes())
+        w,h = self.im.size
         #look at a an alpha mask
-        if im.mode == 'RGBA':
+        if self.im.mode == 'RGBA':
             hasAlpha = True
             dist = w*4
         else:
@@ -51,4 +52,5 @@ class ImageClass(Image):
         #returns the pix buf. Args:
         #array, colorspace, has alpha, bits per sample,
         #width, height, distance in bytes between row starts
-        return GdkPixbuf.Pixbuf.new_from_data(arr, GdkPixbuf.Colorspace.RGB, hasAlpha, 8, w, h, dist)
+        return GdkPixbuf.Pixbuf.new_from_data(arr, GdkPixbuf.Colorspace.RGB,
+                                              hasAlpha, 8, w, h, dist)
