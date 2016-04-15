@@ -34,9 +34,11 @@ if __name__ == "__main__":
     wm.update_baudrate_list(ser.get_baudrates(), ser.baudrate)
     wm.set_serial_cfg()
     wm.status('initialisation réussie')
+    wm.set_image_cfg(cfg)
     
     #creates the imageObject class instance
     im = p_image.ImageClass()
+    #and attach it to the wm object
     wm.set_image(im)
     
     #launch the main Gtk loop, that displays the GUI

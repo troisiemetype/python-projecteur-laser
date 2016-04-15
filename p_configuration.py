@@ -35,6 +35,13 @@ class Configuration:
                     'xonxoff': self.xonxoff}
         return cfg_dict
     
+    #getter for image cfg
+    #construct a dictionnary with the values read in config file
+    def get_image_cfg(self):
+        cfgdict = {'ditance':self.distance, 'width':self.width,
+                   'height':self.height, 'speed':self.speed}
+        return cfg_dict
+    
     #definition of the save function
     def save(self):
         with open('config_copie.cfg', 'w') as configfile:

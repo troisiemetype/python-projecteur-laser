@@ -26,7 +26,7 @@ class Window:
         self.window_file = self.builder.get_object('windowFile')
         self.statusbar = self.builder.get_object('statusbar1')
         
-        #attach the the builder area to their program objects
+        #attach the image area
         self.image = self.builder.get_object('image1')
         
         #Attach the the builder objects to their program objects
@@ -36,6 +36,14 @@ class Window:
         self.parity = self.builder.get_object('labelParity')
         self.stopbits = self.builder.get_object('labelStopBits')
         self.xonxoff = self.builder.get_object('labelXON')
+        
+        self.support_distance = self.builder.get_object('value_support_distance')
+        self.support_width = self.builder.get_object('value_support_width')
+        self.support_height = self.builder.get_object('value_support_height')
+        self.support_speed = self.builder.get_object('value_support_speed')
+        
+        self.image_width = self.builder.get_object('value_image_width')
+        self.image_height = self.builder.get_object('value_image_height')        
 
         #creates a context id for the status bar
         self.context_id = self.statusbar.get_context_id('status')
@@ -62,6 +70,14 @@ class Window:
         self.parity.set_text(self.ser.parity)
         self.stopbits.set_text(str(self.ser.stopbits))
         self.xonxoff.set_text(str(self.ser.xonxoff))
+    
+    #sets the cfg values for the image
+    def set_image_cfg(self, cfg):
+        self.cfg = cfg
+        self.support_distance.set_text(str(cfg.distance))
+        self.support_width.set_text(str(cfg.width))
+        self.support_height.set_text(str(cfg.height))
+        self.support_speed.set_text(str(cfg.speed))
         
     
     #construct the port list.
