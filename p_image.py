@@ -1,5 +1,6 @@
 from PIL import Image
 from math import *
+from statistics import mean
 
 #needed for creating the Gdk image file
 import array
@@ -8,8 +9,11 @@ import array
 from gi.repository import GdkPixbuf
 from gi.repository import Gdk
 
+#needed to update the pprogress bar during computation
+from gi.repository import Gtk
+
 #needed for introducing pauses in the program
-from time import sleep
+from time import sleep, time
 
 class ImageObject():
     #this function initiate the class
@@ -32,22 +36,21 @@ class ImageObject():
         self.uri = uri
         self.width,self.height = self.im.size
         self.ratio = float(self.width/self.height)
-        self.thumb = self.im
+        self.thumb = self.im.copy()
         self.thumb.thumbnail((450, int(450/self.ratio)))
         self.pix_qty =  self.width * self.height
         self.pix_id = 0
         self.cur_row = 0
         self.cur_col = 0
+        print(self.pix_qty)
         return True
     
     #this function "closes" the file that were open.
     #It simply clears all the attributes of self, except the cfg file
     def close_file(self):
         for item in self.__dict__:
-            print(item)
-            if item != 'cfg':
+            if item != 'cfg' and item != 'wm':
                 item = None
-                print('cleared')
             
     #defines the function that get values from the cfg file
     def set_cfg(self, cfg):
@@ -56,10 +59,10 @@ class ImageObject():
     #this function converts PIL images to Pixbuf format for displaying in Gtk
     def get_pixbuf(self):
         #transforms the given image into an array of pixels
-        arr = array.array('B', self.im.tobytes())
-        w,h = self.im.size
+        arr = array.array('B', self.thumb.tobytes())
+        w,h = self.thumb.size
         #look at a an alpha mask
-        if self.im.mode == 'RGBA':
+        if self.thumb.mode == 'RGBA':
             hasAlpha = True
             dist = w*4
         else:
@@ -103,24 +106,20 @@ class ImageObject():
     def send_calibration(self):
         i = 0
         while self.calibration == 1:
+            Gtk.main_iteration_do(False)
             print(i)
             i += 1
     
     #This computes a pixel of the picture, and append the value in a file
-    #the GUI calls the function recursively till all pixels have benn computed
-    def compute_image(self):
-        
-        if self.cur_col > self.width:
-            self.cur_col = 0
-            self.cur_row += 1
-            
-        if self.cur_row > self.height:
-            self.cur_row = 0
-        
-        if self.pix_id > self.pix_qty:
-            self.pix_id = 0
-            return 1
-        self.cur_col += 1
-        self.pix_id += 1
-        return self.pix_id / self.pix_qty
-        
+    #the GUI calls the function and send the progress bar to update
+    def compute_image(self, progressbar):
+        for j in range(self.height):
+            for i in range(self.width):
+                value = mean(self.im.getpixel((i,j)))
+                self.pix_id += 1
+                
+                progressbar(self.pix_id/self.pix_qty)
+                Gtk.main_iteration_do(False)
+        self.pix_id = 0
+        self.cur_col = 0
+        self.cur_row = 0

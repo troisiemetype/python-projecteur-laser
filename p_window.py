@@ -149,7 +149,8 @@ class Window:
     
     #defines the funcion that records entry in the support field
     #just calls the cfg.update_support_cfg() function, that verifies the values passed.
-    def on_support_activate(self, widget, attribute, event=None):
+    def on_support_activate(self, widget, attribute=None, event=None):
+        print(event)
         answer = self.cfg.update_support_value(attribute, int(widget.get_text()))
         if answer != 0:
             self.message_erreur('Valeur maximale permise: %s'%answer,
@@ -240,11 +241,9 @@ class Window:
     #defines the compute function
     def on_compute(self, widget):
         self.progress_total.show()
-        while 1:
-            progress = self.im.compute_image()
-            self.progress_total.set_fraction(progress)
-            if progress == 1:
-                break
+        self.status('Calcul en cours...')
+        self.im.compute_image(self.progress_total.set_fraction)
+        self.status('Image calculée, prête à être envoyée au projecteur.')
         self.progress_total.hide()
         
     

@@ -1,5 +1,13 @@
+# p_serial.py
+# This is part of the laser-projector project, that commands a laser projector
+# for printing images on UV sensible surfaces, like cyanotypes, dichromate gum, etc.
+#
+# This part of the program deals with the UART connection.
+# Once init from a config file (read by p_config.py), it can list ports on demand,
+# send (files) to the arduino board, listening at xon:xoff signal.
+
 import serial
-import serial.tools.list_ports
+from serial.tools import list_ports
 
 class SerialLink(serial.Serial):
     #init the class with the parent class constructor
@@ -20,7 +28,7 @@ class SerialLink(serial.Serial):
     #This lists the ports available
     def get_ports(self):
         #creates a list of the ports available
-        list_all_ports = serial.tools.list_ports.comports()
+        list_all_ports = list_ports.comports()
         list_port = []
         #for each port, get its adress and append it to the list_port list
         for tup in list_all_ports:

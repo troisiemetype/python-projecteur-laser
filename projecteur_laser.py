@@ -47,4 +47,6 @@ if __name__ == "__main__":
     wm.status('initialisation réussie')
     
     #launch the main Gtk loop, that displays the GUI
-    Gtk.main()
+    #Gtk.main()
+while 1:
+    Gtk.main_iteration()
