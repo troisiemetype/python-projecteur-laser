@@ -56,6 +56,9 @@ class Window:
         self.image_height.connect('activate', self.on_image_activate, 'image_height')
         
         self.image_dimensions = self.builder.get_object('grid_image_dimensions')
+        
+        self.progress_total = self.builder.get_object('progress_total')
+        self.progress_step = self.builder.get_object('progress_step')
 
         #creates a context id for the status bar
         self.context_id = self.statusbar.get_context_id('status')
@@ -146,7 +149,7 @@ class Window:
     
     #defines the funcion that records entry in the support field
     #just calls the cfg.update_support_cfg() function, that verifies the values passed.
-    def on_support_activate(self, widget, attribute):
+    def on_support_activate(self, widget, attribute, event=None):
         answer = self.cfg.update_support_value(attribute, int(widget.get_text()))
         if answer != 0:
             self.message_erreur('Valeur maximale permise: %s'%answer,
@@ -215,6 +218,10 @@ class Window:
     def on_calibrate_toggle(self, widget):
         #If the button is active, then start the calibration
         if widget.get_active():
+            self.support_distance.set_editable(False)
+            self.support_width.set_editable(False)
+            self.support_height.set_editable(False)
+            self.support_speed.set_editable(False)
             self.image_width.set_editable(False)
             self.image_height.set_editable(False)
             self.im.calibration = 1
@@ -222,13 +229,24 @@ class Window:
             
         #else it's not, so stop the calibration
         else:
+            self.support_distance.set_editable(True)
+            self.support_width.set_editable(True)
+            self.support_height.set_editable(True)
+            self.support_speed.set_editable(True)
             self.image_width.set_editable(True)
             self.image_height.set_editable(True)
             self.im.calibration = 0
             
-    #defines the compute fuction
+    #defines the compute function
     def on_compute(self, widget):
-        pass
+        self.progress_total.show()
+        while 1:
+            progress = self.im.compute_image()
+            self.progress_total.set_fraction(progress)
+            if progress == 1:
+                break
+        self.progress_total.hide()
+        
     
     #defines the function for sending data - Empty for now
     def on_send(self, widget):

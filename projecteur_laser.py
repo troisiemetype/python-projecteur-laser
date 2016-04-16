@@ -39,7 +39,7 @@ if __name__ == "__main__":
     wm.set_cfg(cfg)
     
     #creates the imageObject class instance
-    im = p_image.ImageClass()
+    im = p_image.ImageObject()
     im.set_cfg(cfg)
     #and attach it to the wm object
     wm.set_image(im)

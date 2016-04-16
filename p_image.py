@@ -8,7 +8,10 @@ import array
 from gi.repository import GdkPixbuf
 from gi.repository import Gdk
 
-class ImageClass():
+#needed for introducing pauses in the program
+from time import sleep
+
+class ImageObject():
     #this function initiate the class
     def __init__(self):
         self.uri = None
@@ -27,17 +30,25 @@ class ImageClass():
         #Load the image, records its uri, get its size, create thumbnail
         self.im.load()
         self.uri = uri
-        w,h = self.im.size
-        self.ratio = float(w/h)
+        self.width,self.height = self.im.size
+        self.ratio = float(self.width/self.height)
         self.thumb = self.im
         self.thumb.thumbnail((450, int(450/self.ratio)))
+        self.pix_qty =  self.width * self.height
+        self.pix_id = 0
+        self.cur_row = 0
+        self.cur_col = 0
         return True
     
     #this function "closes" the file that were open.
-    #It just clears the im and thumb images.
+    #It simply clears all the attributes of self, except the cfg file
     def close_file(self):
-        self.im = None
-        self.thumb = None
+        for item in self.__dict__:
+            print(item)
+            if item != 'cfg':
+                item = None
+                print('cleared')
+            
     #defines the function that get values from the cfg file
     def set_cfg(self, cfg):
         self.cfg = cfg
@@ -63,38 +74,53 @@ class ImageClass():
     #This function calculates the calibrating rectangle.
     #It's called each time the calibrate toggle button is set on.
     def calibrate(self):
+        #calculate the max width and height (given by the projector max angle
+        #and the distance to support)
+        #h_angle & v_angle in degrees, length in mm
+        #2 * distance * tan(angle balayage)
+        max_width = int(2 * self.cfg.distance * tan(radians(self.cfg.h_angle)))
+        max_height = int(2 * self.cfg.distance * tan(radians(self.cfg.v_angle)))
+        
         #sets the max angle increment (half of 16 bits)
-        angle_increment = 2**15
+        angle_value_max = 2**15
+        #sets the angle value
+        #angle = atan(support width * tan(angle balayage)/max width)
+        angle_width = atan((self.cfg.support_width *\
+                                  tan(radians(self.cfg.h_angle)))/max_width)
+        angle_height = atan((self.cfg.support_height *\
+                                   tan(radians(self.cfg.v_angle)))/max_height)
+        #calculate the angle ratio between the current value and the max value
+        angle_ratio_width = degrees(angle_width) / self.cfg.v_angle
+        angle_ratio_height = degrees(angle_height) / self.cfg.h_angle
         
-        #sets the min and max values on both axes, in millimeters,
-        #according to values given in support entry area.
-        self.calibrate_width_min = - self.cfg.support_width/2
-        self.calibrate_width_max = self.cfg.support_width/2
-        self.calibrate_height_min = - self.cfg.support_height/2
-        self.calibrate_height_max = self.cfg.support_height/2
+        #calculate the final angle value, using the max value and the ratio
+        angle_width_max = angle_value_max * angle_ratio_width
+        angle_height_max = angle_value_max * angle_ratio_height
         
-        #Calculates the max possible size, according to distance given
-        width_max = int(self.cfg.distance * tan(radians(self.cfg.h_angle/2)))
-        height_max = int(self.cfg.distance * tan(radians(self.cfg.v_angle/2)))
+        self.send_calibration()
         
-        #Calculates the ratio between the size of the support and the max possible size
-        ratio_width = self.calibrate_width_max/width_max
-        ratio_height = self.calibrate_height_max/height_max
+    #this prepares the coordinates for the calibration movement
+    def send_calibration(self):
+        i = 0
+        while self.calibration == 1:
+            print(i)
+            i += 1
+    
+    #This computes a pixel of the picture, and append the value in a file
+    #the GUI calls the function recursively till all pixels have benn computed
+    def compute_image(self):
         
-        #angle increment / width
-        cmd_width = angle_increment / width_max
-        cmd_height = angle_increment / height_max
+        if self.cur_col > self.width:
+            self.cur_col = 0
+            self.cur_row += 1
+            
+        if self.cur_row > self.height:
+            self.cur_row = 0
         
-        #transforms the self.calibrate_values into angle increments
-        self.calibrate_width_min *= cmd_width * ratio_width
-        self.calibrate_width_max *= cmd_width * ratio_width
-        self.calibrate_height_min *= cmd_height * ratio_height
-        self.calibrate_height_max *= cmd_height * ratio_height
-        print (self.calibrate_height_max)
-        
-        
-        
-        
-        
-        
+        if self.pix_id > self.pix_qty:
+            self.pix_id = 0
+            return 1
+        self.cur_col += 1
+        self.pix_id += 1
+        return self.pix_id / self.pix_qty
         

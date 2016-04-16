@@ -56,8 +56,8 @@ class Configuration:
     def update_support_value(self, attribute, value):
         if attribute == 'distance':
             self.distance = value
-            max_width = int(2 * value * tan(radians(self.h_angle/2)))
-            max_height = int(2 * value * tan(radians(self.v_angle/2)))
+            max_width = int(2 * value * tan(radians(self.h_angle)))
+            max_height = int(2 * value * tan(radians(self.v_angle)))
             if self.support_width > max_width:
                 self.support_width = max_width
             if self.support_height > max_height:
@@ -68,13 +68,13 @@ class Configuration:
                 self.width = self.support_height
     
         elif attribute =='support_width':
-            if value > (2 * self.distance * tan(radians(self.h_angle/2))):
-                return int(2 * self.distance * tan(radians(self.h_angle/2)))
+            if value > (2 * self.distance * tan(radians(self.h_angle))):
+                return int(2 * self.distance * tan(radians(self.h_angle)))
             else:
                 self.support_width = value
         elif attribute =='support_height':
-            if value > (2 * self.distance * tan(radians(self.v_angle/2))):
-                return int(2 * self.distance * tan(radians(self.v_angle/2)))
+            if value > (2 * self.distance * tan(radians(self.v_angle))):
+                return int(2 * self.distance * tan(radians(self.v_angle)))
             else:
                 self.support_height = value
         elif attribute =='speed':
