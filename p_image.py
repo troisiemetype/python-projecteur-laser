@@ -42,6 +42,10 @@ class ImageObject():
         self.pix_id = 0
         self.cur_row = 0
         self.cur_col = 0
+        self.compute_flag = 0
+        self.calibration_flag = 0
+        self.data_buffer = []
+        self.calibration_buffer = []
         print(self.pix_qty)
         return True
     
@@ -99,16 +103,13 @@ class ImageObject():
         #calculate the final angle value, using the max value and the ratio
         angle_width_max = angle_value_max * angle_ratio_width
         angle_height_max = angle_value_max * angle_ratio_height
-        
-        self.send_calibration()
+        self.i = 0
         
     #this prepares the coordinates for the calibration movement
     def send_calibration(self):
-        i = 0
-        while self.calibration == 1:
-            Gtk.main_iteration_do(False)
-            print(i)
-            i += 1
+        Gtk.main_iteration_do(False)
+        print(self.i)
+        self.i += 1
     
     #This computes a pixel of the picture, and append the value in a file
     #the GUI calls the function and send the progress bar to update

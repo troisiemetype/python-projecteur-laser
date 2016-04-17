@@ -439,14 +439,14 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="toolbutton_pause">
+              <object class="GtkToggleToolButton" id="toolbutton_pause">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Mettre en pause l'envoi des données</property>
                 <property name="label" translatable="yes">Mettre en pause</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-media-pause</property>
-                <signal name="clicked" handler="on_pause" swapped="no"/>
+                <signal name="toggled" handler="on_pause" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -798,6 +798,7 @@ Largeur de l'image</property>
   </object>
   <object class="GtkDialog" id="windowSettings">
     <property name="can_focus">False</property>
+    <property name="window_position">center</property>
     <property name="type_hint">dialog</property>
     <signal name="delete-event" handler="on_delete_event" swapped="no"/>
     <child internal-child="vbox">

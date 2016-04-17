@@ -13,6 +13,9 @@ class SerialLink(serial.Serial):
     #init the class with the parent class constructor
     def __init__(self):
         serial.Serial.__init__(self)
+        self.send_flag = 0
+        self.pause_flag = 0
+        self.data_flag = 0
     
     #init the instance of the class with values comming from the config file
     #values are passed trough a dictionnary

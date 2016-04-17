@@ -16,6 +16,8 @@ class Window:
     #construct the main window
     #connects the widget to the function they need
     def __init__(self):
+        #set at 1 the var that traces if the program is running
+        self.running = 1
         #construct the window from the glade file
         self.builder = Gtk.Builder()
         self.builder.add_from_file('fenetre_projecteur.glade')
@@ -25,6 +27,9 @@ class Window:
         self.window_settings = self.builder.get_object('windowSettings')
         self.window_file = self.builder.get_object('windowFile')
         self.statusbar = self.builder.get_object('statusbar1')
+        
+        #attache the pause button
+        self.toolbutton_pause = self.builder.get_object('toolbutton_pause')
         
         #attach the image area
         self.image = self.builder.get_object('image1')
@@ -37,6 +42,10 @@ class Window:
         self.stopbits = self.builder.get_object('labelStopBits')
         self.xonxoff = self.builder.get_object('labelXON')
         
+        #Attache the coordinates area to their program objects
+        self.support_dimensions = self.builder.get_object('grid_support_dimensions')
+        self.image_dimensions = self.builder.get_object('grid_image_dimensions')
+
         #Attach the builder entry to their program objects
         self.support_distance = self.builder.get_object('value_support_distance')
         self.support_width = self.builder.get_object('value_support_width')
@@ -54,8 +63,6 @@ class Window:
         
         self.image_width.connect('activate', self.on_image_activate, 'image_width')
         self.image_height.connect('activate', self.on_image_activate, 'image_height')
-        
-        self.image_dimensions = self.builder.get_object('grid_image_dimensions')
         
         self.progress_total = self.builder.get_object('progress_total')
         self.progress_step = self.builder.get_object('progress_step')
@@ -170,9 +177,11 @@ class Window:
     #Defines the close/quit function for the main window
     def on_quit(self, widget):
         Gtk.main_quit()
+        self.running = 0
         
     #defines the function for opening file
     def on_open(self, widget):
+        self.window_main.set_sensitive(False)
         self.window_file.show()
     
     #defines the function for closing file
@@ -184,7 +193,7 @@ class Window:
         if self.im.im == None:
             return
         answer = self.message_validation("Fermer l'image", 'Tous les réglages seront perdus')
-        if answer == -6:
+        if answer != -5:
             return
         self.image.set_from_icon_name(Gtk.STOCK_MISSING_IMAGE, 6)
         self.image_dimensions.hide()
@@ -193,6 +202,7 @@ class Window:
     
     #defines the function for preferences
     def on_settings(self, widget):
+        self.window_main.set_sensitive(False)
         self.window_settings.show()
     
     #defines how the connection is handled
@@ -219,24 +229,16 @@ class Window:
     def on_calibrate_toggle(self, widget):
         #If the button is active, then start the calibration
         if widget.get_active():
-            self.support_distance.set_editable(False)
-            self.support_width.set_editable(False)
-            self.support_height.set_editable(False)
-            self.support_speed.set_editable(False)
-            self.image_width.set_editable(False)
-            self.image_height.set_editable(False)
-            self.im.calibration = 1
+            self.support_dimensions.set_sensitive(False)
+            self.image_dimensions.set_sensitive(False)
+            self.im.calibration_flag = 1
             self.im.calibrate()
             
         #else it's not, so stop the calibration
         else:
-            self.support_distance.set_editable(True)
-            self.support_width.set_editable(True)
-            self.support_height.set_editable(True)
-            self.support_speed.set_editable(True)
-            self.image_width.set_editable(True)
-            self.image_height.set_editable(True)
-            self.im.calibration = 0
+            self.support_dimensions.set_sensitive(False)
+            self.image_dimensions.set_sensitive(False)
+            self.im.calibration_flag = 0
             
     #defines the compute function
     def on_compute(self, widget):
@@ -249,24 +251,33 @@ class Window:
     
     #defines the function for sending data - Empty for now
     def on_send(self, widget):
-        pass
+        if self.ser.pause_flag == 1:
+            self.toolbutton_pause.set_active(0)
+        else:
+            self.ser.send_flag = 1
     
     #defines the function for pausing data - Empty for now
     def on_pause(self, widget):
-        pass
+        if widget.get_active():
+            self.ser.pause_flag = 1
+        else:
+            self.ser.pause_flag = 0
     
     #defines the function for stopping data - Empty for now
     def on_stop(self, widget):
-        pass
+        self.ser.send_flag = 0
+        #need to add a (call to a) method that init the laser on 0
     
     #defines the function for updating port list
     def on_button_scan_clicked(self, widget):
         self.update_port_list(self.ser.get_ports(), self.ser.port)
+        
      #Defines a function that stop delete events to don't kill the object.
      #Needed as without it, closing the window from the cross or using "escape"
      #will kill the object, and so it won't be reachable at next call
     def on_delete_event(self, widget, event):
         widget.hide()
+        self.window_main.set_sensitive(True)
         return True
     
     #defines the function for validating settings
@@ -274,15 +285,18 @@ class Window:
     def on_settings_ok_clicked(self, widget):
         #cfg.save()
         self.window_settings.hide()
+        self.window_main.set_sensitive(True)
         
     #defines the function for cancelling settings
     def on_settings_cancel_clicked(self, widget):
         self.window_settings.hide()
+        self.window_main.set_sensitive(True)
         
     #defines the function that handles opening file
     #TODO: look at how to link it with the file openning
     def on_file_ok_clicked(self, widget):
         if self.im.open_file(self.window_file.get_filename()):
+            self.window_main.set_sensitive(True)
             self.window_file.hide()
             self.image.set_from_pixbuf(self.im.get_pixbuf())
             self.image_dimensions.show()
@@ -291,15 +305,12 @@ class Window:
     #defines the function that handles openning file
     def on_file_cancel_clicked(self, widget):
         self.window_file.hide()
+        self.window_main.set_sensitive(True)
     
     #defines the function that handle return key on file openning
     def on_window_file_key_press_event(self, widget, event):
         if event.keyval == Gdk.KEY_Return:
             self.on_file_ok_clicked(widget)
-    
-    #defines the close cancel button handeling
-    def on_dialog_close(self, widget):
-        self.window_file.hide()
     
     #defines the basic error message
     def message_erreur(self, message='', secondary=None):
@@ -308,8 +319,12 @@ class Window:
                                           message)
         if secondary != None:
             dialog.format_secondary_text(secondary)
+        
+        self.window_main.set_sensitive(False)        
         dialog.run()
         dialog.destroy()
+        self.window_main.set_sensitive(True)
+        
     
     #defines a dialog that display a message, and return a yes/no value
     def message_validation(self, message='', secondary=None):
@@ -318,8 +333,10 @@ class Window:
                                              message)
         if secondary != None:
             dialog.format_secondary_text(secondary)
+        self.window_main.set_sensitive(False)
         answer = dialog.run()
         dialog.destroy()
+        self.window_main.set_sensitive(True)
         return answer
             
     #defines the status update
