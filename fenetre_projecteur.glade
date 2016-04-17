@@ -386,6 +386,7 @@
             <child>
               <object class="GtkToggleToolButton" id="toolbutton_calibrate">
                 <property name="visible">True</property>
+                <property name="sensitive">False</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Projeter le support</property>
                 <property name="label" translatable="yes">Etalonner</property>
@@ -401,6 +402,7 @@
             <child>
               <object class="GtkToolButton" id="toolbutton_compute">
                 <property name="visible">True</property>
+                <property name="sensitive">False</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Calculer les trajectoires</property>
                 <property name="label" translatable="yes">toolbutton5</property>
@@ -426,6 +428,7 @@
             <child>
               <object class="GtkToolButton" id="toolbutton_send">
                 <property name="visible">True</property>
+                <property name="sensitive">False</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Envoyer les données</property>
                 <property name="label" translatable="yes">Envoyer le fichier</property>
@@ -441,6 +444,7 @@
             <child>
               <object class="GtkToggleToolButton" id="toolbutton_pause">
                 <property name="visible">True</property>
+                <property name="sensitive">False</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Mettre en pause l'envoi des données</property>
                 <property name="label" translatable="yes">Mettre en pause</property>
@@ -454,8 +458,9 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="toolbutton _stop">
+              <object class="GtkToolButton" id="toolbutton_stop">
                 <property name="visible">True</property>
+                <property name="sensitive">False</property>
                 <property name="can_focus">False</property>
                 <property name="tooltip_text" translatable="yes">Arrêter l'envoi des données</property>
                 <property name="label" translatable="yes">Arrêter</property>

@@ -28,9 +28,42 @@ class Window:
         self.window_file = self.builder.get_object('windowFile')
         self.statusbar = self.builder.get_object('statusbar1')
         
-        #attache the pause button
-        self.toolbutton_pause = self.builder.get_object('toolbutton_pause')
+        #attache the toolbuttons. We need them to set sensitive them on and off
+        self.toolbutton_open = self.builder.get_object('toolbutton_open')
+        self.toolbutton_close = self.builder.get_object('toolbutton_close')
         
+        self.toolbutton_settings = self.builder.get_object('toolbutton_settings')
+
+        self.toolbutton_connect = self.builder.get_object('toolbutton_connect')
+        self.toolbutton_disconnect = self.builder.get_object('toolbutton_disconnect')
+        
+        self.toolbutton_calibrate = self.builder.get_object('toolbutton_calibrate')
+        self.toolbutton_compute = self.builder.get_object('toolbutton_compute')
+        
+        self.toolbutton_send = self.builder.get_object('toolbutton_send')
+        self.toolbutton_pause = self.builder.get_object('toolbutton_pause')
+        self.toolbutton_stop = self.builder.get_object('toolbutton_stop')
+        
+        #creatings groups of buttons for easy sensitiving
+        self.toolbutton_open_group = [self.toolbutton_calibrate,
+                                      self.toolbutton_compute,
+                                      self.toolbutton_send,
+                                      self.toolbutton_pause,
+                                      self.toolbutton_stop]
+        
+        self.toolbutton_compute_group = [self.toolbutton_open,
+                                         self.toolbutton_close,
+                                         self.toolbutton_settings,
+                                         self.toolbutton_connect,
+                                         self.toolbutton_disconnect,
+                                         self.toolbutton_send]
+        self.toolbutton_send_group = [self.toolbutton_open,
+                                         self.toolbutton_close,
+                                         self.toolbutton_settings,
+                                         self.toolbutton_connect,
+                                         self.toolbutton_disconnect,
+                                         self.toolbutton_calibrate,
+                                         self.toolbutton_compute]
         #attach the image area
         self.image = self.builder.get_object('image1')
         
@@ -199,6 +232,8 @@ class Window:
         self.image_dimensions.hide()
         self.status('Image %s fermée'%self.im.uri)
         self.im.close_file()
+        for tb in self.toolbutton_open_group:
+            tb.set_sensitive(False)
     
     #defines the function for preferences
     def on_settings(self, widget):
@@ -238,6 +273,8 @@ class Window:
         if widget.get_active():
             self.support_dimensions.set_sensitive(False)
             self.image_dimensions.set_sensitive(False)
+            for tb in self.toolbutton_compute_group:
+                tb.set_sensitive(False)
             self.im.calibration_flag = 1
             self.im.calibrate()
             
@@ -245,6 +282,8 @@ class Window:
         else:
             self.support_dimensions.set_sensitive(True)
             self.image_dimensions.set_sensitive(True)
+            for tb in self.toolbutton_compute_group:
+                tb.set_sensitive(True)
             self.im.calibration_flag = 0
             
     #defines the compute function
@@ -264,6 +303,9 @@ class Window:
             self.toolbutton_pause.set_active(0)
         else:
             self.ser.send_flag = 1
+            for tb in self.toolbutton_send_group:
+                tb.set_sensitive(False)
+            
     
     #defines the function for pausing data - Empty for now
     def on_pause(self, widget):
@@ -274,6 +316,10 @@ class Window:
     
     #defines the function for stopping data - Empty for now
     def on_stop(self, widget):
+        if self.ser.pause_flag == 1:
+            self.toolbutton_pause.set_active(0)
+        for tb in self.toolbutton_send_group:
+            tb.set_sensitive(True)
         self.ser.send_flag = 0
         #need to add a (call to a) method that init the laser on 0
     
@@ -305,6 +351,8 @@ class Window:
     #TODO: look at how to link it with the file openning
     def on_file_ok_clicked(self, widget):
         if self.im.open_file(self.window_file.get_filename()):
+            for tb in self.toolbutton_open_group:
+                tb.set_sensitive(True)
             self.window_main.set_sensitive(True)
             self.window_file.hide()
             self.image.set_from_pixbuf(self.im.get_pixbuf())
