@@ -53,3 +53,8 @@ while wm.running == 1:
             im.send_calibration()
     except:
         pass
+    try:
+        if im.compute_flag == 1:
+            im.compute_image(wm.progress_total)
+    except:
+        pass

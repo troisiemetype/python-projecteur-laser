@@ -251,9 +251,11 @@ class Window:
     def on_compute(self, widget):
         self.progress_total.show()
         self.status('Calcul en cours...')
-        self.im.compute_image(self.progress_total.set_fraction)
+        self.im.compute_flag = 1
+        self.im.update_max_size()
+        self.im.update_ratio_pix_to_mm()
+        
         self.status('Image calculée, prête à être envoyée au projecteur.')
-        self.progress_total.hide()
         
     
     #defines the function for sending data - Empty for now

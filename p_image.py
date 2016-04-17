@@ -78,31 +78,76 @@ class ImageObject():
         return GdkPixbuf.Pixbuf.new_from_data(arr, GdkPixbuf.Colorspace.RGB,
                                               hasAlpha, 8, w, h, dist)
     
-    #This function calculates the calibrating rectangle.
-    #It's called each time the calibrate toggle button is set on.
-    def calibrate(self):
-        #calculate the max width and height (given by the projector max angle
-        #and the distance to support)
+    #this functions calculates the max size, according to the distance of the support
+    def update_max_size(self):
         #h_angle & v_angle in degrees, length in mm
         #2 * distance * tan(angle balayage)
-        max_width = int(2 * self.cfg.distance * tan(radians(self.cfg.h_angle)))
-        max_height = int(2 * self.cfg.distance * tan(radians(self.cfg.v_angle)))
+        self.max_width = int(2 * self.cfg.distance * tan(radians(self.cfg.h_angle)))
+        self.max_height = int(2 * self.cfg.distance * tan(radians(self.cfg.v_angle)))
+        print(self.max_height, self.max_width)
+        return self.max_width, self.max_height
+    
+    #This function transformates the size in pixels into millimeters
+    def update_ratio_pix_to_mm(self):
+        if self.ratio > 1:
+            self.ratio_pix_mm = self.cfg.width / self.width
+        else:
+            self.ratio_pix_mm = self.cfg.height / self.height
+        print(self.ratio_pix_mm)
+    
+    #This functions get the angle value from the millimeters value
+    #the pos argument is the position, in mm, from center.
+    #So it can hold negative values. In fact it does, half the time.
+    #the angle returned is in radians
+    def get_angle_value(self, pos):
+        x_pos = pos[0]
+        y_pos = pos[1]
+        
+        #sets the angle value
+        #angle = atan(support width * tan(angle balayage)/max width)        
+        x_angle = atan((x_pos * tan(radians(self.cfg.h_angle))) / (self.max_width / 2))
+        y_angle = atan((y_pos * tan(radians(self.cfg.v_angle))) / (self.max_height / 2))
+        
+        print(degrees(x_angle), degrees(y_angle))
+        
+        return x_angle, y_angle
+    
+    #This function calculates the position to send to the projector, given the angle
+    def get_serial_pos(self, angle):
+        angle_width = angle[0]
+        angle_height = angle[1]
         
         #sets the max angle increment (half of 16 bits)
         angle_value_max = 2**15
-        #sets the angle value
-        #angle = atan(support width * tan(angle balayage)/max width)
-        angle_width = atan((self.cfg.support_width *\
-                                  tan(radians(self.cfg.h_angle)))/max_width)
-        angle_height = atan((self.cfg.support_height *\
-                                   tan(radians(self.cfg.v_angle)))/max_height)
+        
         #calculate the angle ratio between the current value and the max value
         angle_ratio_width = degrees(angle_width) / self.cfg.v_angle
         angle_ratio_height = degrees(angle_height) / self.cfg.h_angle
-        
+    
         #calculate the final angle value, using the max value and the ratio
-        angle_width_max = angle_value_max * angle_ratio_width
-        angle_height_max = angle_value_max * angle_ratio_height
+        x_angle = angle_value_max * angle_ratio_width
+        y_angle = angle_value_max * angle_ratio_height
+        
+        print(x_angle, y_angle)
+        
+        return x_angle, y_angle
+    
+    def get_laser_pos(self, value):
+        #sets the max value (16 bits)
+        value_max = 2**16
+        
+        return int(value_max - 256*(value + 1))
+    
+    #This function calculates tax_size = he calibrating rectangle.
+    #It's called each time the calibrate toggle button is set on.
+    def calibrate(self):
+        #get max size
+        self.update_max_size()
+        #get angle for this position
+        angle_width, angle_height = self.get_angle_value((self.cfg.support_width/2,
+                                                    self.cfg.support_height/2))
+        self.get_serial_pos((angle_width, angle_height))
+        
         self.i = 0
         
     #this prepares the coordinates for the calibration movement
@@ -112,15 +157,38 @@ class ImageObject():
         self.i += 1
     
     #This computes a pixel of the picture, and append the value in a file
-    #the GUI calls the function and send the progress bar to update
+    #the main loop calls this on each iteration if the im.compute_flag is set
     def compute_image(self, progressbar):
-        for j in range(self.height):
-            for i in range(self.width):
-                value = mean(self.im.getpixel((i,j)))
-                self.pix_id += 1
-                
-                progressbar(self.pix_id/self.pix_qty)
-                Gtk.main_iteration_do(False)
-        self.pix_id = 0
-        self.cur_col = 0
-        self.cur_row = 0
+        #get j and i (row index, col index) from the current pix id
+        j = floor(self.pix_id / self.width)
+        i = self.pix_id % self.width
+        
+        #get the value of the current pixel
+        pix_value = mean(self.im.getpixel((i,j)))
+        
+        #transform the pixel value int oprojecteur value
+        laser_pos = self.get_laser_pos(pix_value)
+        
+        #calculates position in mm
+        x_pos = (i - self.width/2) * self.ratio_pix_mm
+        y_pos = (j - self.height/2) * self.ratio_pix_mm
+        
+        #Transform this position into angle
+        x_pos, y_pos = self.get_angle_value((x_pos, y_pos))
+        
+        #Transform this angle into projector value
+        x_pos, y_pos = self.get_serial_pos((x_pos, y_pos))
+
+        #increment the pixel id
+        self.pix_id += 1
+        
+        #updates progressbar
+        progressbar.set_fraction(self.pix_id/self.pix_qty)
+        
+        #if pix_id is greater than pix_qty, the whole image have been parsed.
+        #set pix_id and compute_flag to 0, hide progress bar
+        if self.pix_id >= self.pix_qty:
+            self.pix_id = 0
+            self.compute_flag = 0
+            progressbar.hide()
+
