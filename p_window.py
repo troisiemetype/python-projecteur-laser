@@ -208,7 +208,7 @@ class Window:
     #defines how the connection is handled
     def on_connect(self, widget):
         #Verifies that we're not already connected
-        if self.ser.isOpen():
+        if self.ser.is_open:
             self.message_erreur('Vous êtes déja connecté')
             return
         #try to connect to the port
@@ -222,6 +222,13 @@ class Window:
         
     #defines the function for disconnect
     def on_disconnect(self, widget):
+        if not self.ser.is_open:
+            self.message_erreur("Vous n'êtes pas connecté")
+            return
+        answer = self.message_validation('Fermer la connexion série?',
+                                         'Le travail en cours sera perdu')
+        if answer != -5:
+            return
         self.ser.close()
         self.status('déconnecté')
     
@@ -236,8 +243,8 @@ class Window:
             
         #else it's not, so stop the calibration
         else:
-            self.support_dimensions.set_sensitive(False)
-            self.image_dimensions.set_sensitive(False)
+            self.support_dimensions.set_sensitive(True)
+            self.image_dimensions.set_sensitive(True)
             self.im.calibration_flag = 0
             
     #defines the compute function
