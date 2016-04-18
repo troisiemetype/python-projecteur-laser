@@ -9,6 +9,7 @@ from gi.repository import Gtk
 import p_configuration
 import p_serial
 import p_window
+import p_jsonparser
 import p_image
 
 #instanciate classes,
@@ -37,10 +38,15 @@ wm.update_baudrate_list(ser.get_baudrates(), ser.baudrate)
 wm.set_serial_cfg()
 wm.set_cfg(cfg)
 
+#Creates the json parser class instance
+jsp = p_jsonparser.JsonParser()
+
 #creates the imageObject class instance
 im = p_image.ImageObject()
 im.set_cfg(cfg)
-#and attach it to the wm object
+im.set_jsp(jsp)
+#and attach it to the other objects
+ser.im = im
 wm.set_image(im)
 wm.status("gestionnaire d'image créé")
 wm.status('initialisation réussie')
@@ -48,11 +54,8 @@ wm.status('initialisation réussie')
 #Main loop. Calls the window refresh on each iteration
 while wm.running == 1:
     Gtk.main_iteration_do(False)
-    try:
-        if im.calibration_flag == 1:
-            im.send_calibration()
-    except:
-        pass
+    ser.send_calibration()
+
     try:
         if im.compute_flag == 1:
             im.compute_image(wm.progress_total)

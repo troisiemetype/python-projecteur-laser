@@ -16,6 +16,7 @@ console.toolbox = [{'autosave': False,
 proj.file-list = [loc('projecteur_laser.py'),
                   loc('p_configuration.py'),
                   loc('p_image.py'),
+                  loc('p_jsonparser.py'),
                   loc('p_serial.py'),
                   loc('p_window.py')]
 proj.file-type = 'shared'

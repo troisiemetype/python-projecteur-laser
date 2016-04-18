@@ -12,6 +12,11 @@ from serial import SerialException
 
 #definition of main program window
 class Window:
+    #These are the links to other class used by the main program.
+    #These are class attributes
+    ser = None
+    im = None
+    cfg = None
     #Init function
     #construct the main window
     #connects the widget to the function they need
@@ -112,7 +117,7 @@ class Window:
     #This function sets a link to the SerialLink object, so the GUI can use it
     def set_serial(self, ser):
         self.ser = ser
-    
+   
     #This function sets a link to the Image object, so the GUI can use it
     def set_image(self, im):
         self.im = im
@@ -209,7 +214,6 @@ class Window:
 
     #Defines the close/quit function for the main window
     def on_quit(self, widget):
-        Gtk.main_quit()
         self.running = 0
         
     #defines the function for opening file
@@ -249,6 +253,9 @@ class Window:
         #try to connect to the port
         try:
             self.ser.open()
+            #if self.im.im != None:
+                #for item in self.toolbutton_open_group:
+                    #item.set_sensitive(True)
             self.status('Connecté à %s' %self.ser.port)
         #else catch an exception and display an error message
         except SerialException:
@@ -265,6 +272,10 @@ class Window:
         if answer != -5:
             return
         self.ser.close()
+        
+        #for item in self.toolbutton_open_group:
+            #item.set_sensitive(False)
+     
         self.status('déconnecté')
     
     #Defines the function that launch/stops the calibration.
@@ -284,7 +295,7 @@ class Window:
             self.image_dimensions.set_sensitive(True)
             for tb in self.toolbutton_compute_group:
                 tb.set_sensitive(True)
-            self.im.calibration_flag = 0
+            self.im.calibration_flag = 2
             
     #defines the compute function
     def on_compute(self, widget):
@@ -351,8 +362,9 @@ class Window:
     #TODO: look at how to link it with the file openning
     def on_file_ok_clicked(self, widget):
         if self.im.open_file(self.window_file.get_filename()):
-            for tb in self.toolbutton_open_group:
-                tb.set_sensitive(True)
+            #if self.ser.is_open:
+                #for tb in self.toolbutton_open_group:
+                    #tb.set_sensitive(True)
             self.window_main.set_sensitive(True)
             self.window_file.hide()
             self.image.set_from_pixbuf(self.im.get_pixbuf())

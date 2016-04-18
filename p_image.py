@@ -15,12 +15,19 @@ from gi.repository import Gtk
 #needed for introducing pauses in the program
 from time import sleep, time
 
-class ImageObject():
+class ImageObject:
+    #This three are links to other class used by the main program.
+    #These are class attributes.
+    #That way when lcosing a file, attributes are cleared but those stays
+    cfg = None
+    jsp = None
+    wm = None
     #this function initiate the class
     def __init__(self):
         self.uri = None
         self.im = None
         self.thumb = None
+        self.calibration_flag = 0
         
     #This function deals with openning a new file
     #it tries to open the file that URI points on, gives false if it can't
@@ -48,17 +55,20 @@ class ImageObject():
         self.calibration_buffer = []
         return True
     
-    #this function "closes" the file that were open.
-    #It simply clears all the attributes of self, except the cfg file
+    #this function "closes" the file that was open.
+    #It simply clears all the instance attributes of self.
     def close_file(self):
         for item in self.__dict__:
-            if item != 'cfg' and item != 'wm':
-                item = None
+            self.__setattr__(item, None)
             
     #defines the function that get values from the cfg file
     def set_cfg(self, cfg):
         self.cfg = cfg
         
+    #defines the function that get a link to the json class
+    def set_jsp(self, jsp):
+        self.jsp = jsp
+
     #this function converts PIL images to Pixbuf format for displaying in Gtk
     def get_pixbuf(self):
         #transforms the given image into an array of pixels
@@ -144,16 +154,22 @@ class ImageObject():
         
         l_pos = 25000
         self.calibration_buffer = []
-        corner = self.to_json(0, -x_pos, y_pos, l_pos, 0, 0)
+        corner = self.jsp.to_json(0, -x_pos, y_pos, 0, 0, 0)
         self.calibration_buffer.append(corner)
-        corner = self.to_json(1, x_pos, y_pos, l_pos, 0, 0)
+        corner = self.jsp.to_json(1, -x_pos, y_pos, l_pos, 0, 0)
         self.calibration_buffer.append(corner)
-        corner = self.to_json(2, x_pos, -y_pos, l_pos, 0, 0)
+        corner = self.jsp.to_json(2, x_pos, y_pos, l_pos, 0, 0)
         self.calibration_buffer.append(corner)
-        corner = self.to_json(3, -x_pos, -y_pos, l_pos, 0, 0)
+        corner = self.jsp.to_json(3, x_pos, -y_pos, l_pos, 0, 0)
+        self.calibration_buffer.append(corner)
+        corner = self.jsp.to_json(4, -x_pos, -y_pos, l_pos, 0, 0)
+        self.calibration_buffer.append(corner)
+        corner = self.jsp.to_json(5, -x_pos, -y_pos, 0, 0, 0)
         self.calibration_buffer.append(corner)
         
         self.i = 0
+        
+        print(self.calibration_buffer)
         
     #this reads the the coordinates for the calibration movement in a circular movement
     def send_calibration(self):
@@ -185,7 +201,7 @@ class ImageObject():
         x_pos, y_pos = self.get_serial_pos((x_pos, y_pos))
         
         #call the json_creator
-        json_string = self.to_json(self.pix_id, x_pos, y_pos, laser_pos, self.cfg.speed, 1)
+        json_string = self.jsp.to_json(self.pix_id, x_pos, y_pos, laser_pos, self.cfg.speed, 1)
         
         #and add it to the buffer
         self.data_buffer.append(json_string)
@@ -202,9 +218,3 @@ class ImageObject():
             self.pix_id = 0
             self.compute_flag = 0
             progressbar.hide()
-    
-    #This function creates a json string from the coordinates
-    def to_json(self, pix_id, x_pos, y_pos, l_pos, speed=200, mode = 0):
-        json_string = '{{"ID":{0},"X":{1},"Y":{2}"L":{3},"speed":{4},"mode":{5}}}'
-        json_string = json_string.format(pix_id, x_pos, y_pos, l_pos,speed, mode)
-        return json_string
