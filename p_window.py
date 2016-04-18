@@ -307,14 +307,14 @@ class Window:
                 tb.set_sensitive(False)
             
     
-    #defines the function for pausing data - Empty for now
+    #defines the function for pausing data
     def on_pause(self, widget):
         if widget.get_active():
             self.ser.pause_flag = 1
         else:
             self.ser.pause_flag = 0
     
-    #defines the function for stopping data - Empty for now
+    #defines the function for stopping data
     def on_stop(self, widget):
         if self.ser.pause_flag == 1:
             self.toolbutton_pause.set_active(0)

@@ -46,7 +46,6 @@ class ImageObject():
         self.calibration_flag = 0
         self.data_buffer = []
         self.calibration_buffer = []
-        print(self.pix_qty)
         return True
     
     #this function "closes" the file that were open.
@@ -84,7 +83,6 @@ class ImageObject():
         #2 * distance * tan(angle balayage)
         self.max_width = int(2 * self.cfg.distance * tan(radians(self.cfg.h_angle)))
         self.max_height = int(2 * self.cfg.distance * tan(radians(self.cfg.v_angle)))
-        print(self.max_height, self.max_width)
         return self.max_width, self.max_height
     
     #This function transformates the size in pixels into millimeters
@@ -93,7 +91,6 @@ class ImageObject():
             self.ratio_pix_mm = self.cfg.width / self.width
         else:
             self.ratio_pix_mm = self.cfg.height / self.height
-        print(self.ratio_pix_mm)
     
     #This functions get the angle value from the millimeters value
     #the pos argument is the position, in mm, from center.
@@ -107,9 +104,7 @@ class ImageObject():
         #angle = atan(support width * tan(angle balayage)/max width)        
         x_angle = atan((x_pos * tan(radians(self.cfg.h_angle))) / (self.max_width / 2))
         y_angle = atan((y_pos * tan(radians(self.cfg.v_angle))) / (self.max_height / 2))
-        
-        print(degrees(x_angle), degrees(y_angle))
-        
+             
         return x_angle, y_angle
     
     #This function calculates the position to send to the projector, given the angle
@@ -125,11 +120,9 @@ class ImageObject():
         angle_ratio_height = degrees(angle_height) / self.cfg.h_angle
     
         #calculate the final angle value, using the max value and the ratio
-        x_angle = angle_value_max * angle_ratio_width
-        y_angle = angle_value_max * angle_ratio_height
-        
-        print(x_angle, y_angle)
-        
+        x_angle = int(angle_value_max * angle_ratio_width)
+        y_angle = int(angle_value_max * angle_ratio_height)
+               
         return x_angle, y_angle
     
     def get_laser_pos(self, value):
@@ -138,22 +131,34 @@ class ImageObject():
         
         return int(value_max - 256*(value + 1))
     
-    #This function calculates tax_size = he calibrating rectangle.
-    #It's called each time the calibrate toggle button is set on.
+    #This function calculates the calibrating rectangle.
+    #It's called on the calibration button toggle.
+    #TODO: add a cfg parameter for the laser intensity during calibrating
     def calibrate(self):
         #get max size
         self.update_max_size()
         #get angle for this position
         angle_width, angle_height = self.get_angle_value((self.cfg.support_width/2,
                                                     self.cfg.support_height/2))
-        self.get_serial_pos((angle_width, angle_height))
+        x_pos, y_pos = self.get_serial_pos((angle_width, angle_height))
+        
+        l_pos = 25000
+        self.calibration_buffer = []
+        corner = self.to_json(0, -x_pos, y_pos, l_pos, 0, 0)
+        self.calibration_buffer.append(corner)
+        corner = self.to_json(1, x_pos, y_pos, l_pos, 0, 0)
+        self.calibration_buffer.append(corner)
+        corner = self.to_json(2, x_pos, -y_pos, l_pos, 0, 0)
+        self.calibration_buffer.append(corner)
+        corner = self.to_json(3, -x_pos, -y_pos, l_pos, 0, 0)
+        self.calibration_buffer.append(corner)
         
         self.i = 0
         
-    #this prepares the coordinates for the calibration movement
+    #this reads the the coordinates for the calibration movement in a circular movement
     def send_calibration(self):
-        Gtk.main_iteration_do(False)
-        print(self.i)
+        self.i %= 4
+        self.calibration_buffer[self.i]
         self.i += 1
     
     #This computes a pixel of the picture, and append the value in a file
@@ -178,6 +183,12 @@ class ImageObject():
         
         #Transform this angle into projector value
         x_pos, y_pos = self.get_serial_pos((x_pos, y_pos))
+        
+        #call the json_creator
+        json_string = self.to_json(self.pix_id, x_pos, y_pos, laser_pos, self.cfg.speed, 1)
+        
+        #and add it to the buffer
+        self.data_buffer.append(json_string)
 
         #increment the pixel id
         self.pix_id += 1
@@ -191,4 +202,9 @@ class ImageObject():
             self.pix_id = 0
             self.compute_flag = 0
             progressbar.hide()
-
+    
+    #This function creates a json string from the coordinates
+    def to_json(self, pix_id, x_pos, y_pos, l_pos, speed=200, mode = 0):
+        json_string = '{{"ID":{0},"X":{1},"Y":{2}"L":{3},"speed":{4},"mode":{5}}}'
+        json_string = json_string.format(pix_id, x_pos, y_pos, l_pos,speed, mode)
+        return json_string
