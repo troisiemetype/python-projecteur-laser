@@ -20,6 +20,7 @@ class SerialLink(serial.Serial):
         self.calibrate_flag = 0
         self.send_flag = 0
         self.pause_flag = 0
+        self.stop_flag = 0
         self.data_flag = 0
         self.i = 0
     
@@ -33,11 +34,7 @@ class SerialLink(serial.Serial):
         self.stopbits = cfg['stopbits']
         self.timeout = cfg['timeout']
         self.xonxoff = cfg['xonxoff']
-    
-    #This attach the wm object to the serial object
-    def set_wm(self, wm):
-        self.wm = wm
-    
+        
     #This lists the ports available
     def get_ports(self):
         #creates a list of the ports available
@@ -57,25 +54,36 @@ class SerialLink(serial.Serial):
         if self.calibrate_flag == 0:
             return 0
         string_to_send = self.im.calibration_buffer[self.i]
+        
+        #If flag == 2, the calibration ends: last instruction is stop the laser
+        if self.calibrate_flag == 2:
+            string_to_send = self.im.calibration_buffer[5]
+            self.i = 0
+            self.calibrate_flag = 0
+            
         byte_to_send = array.array('u', string_to_send)
         
-        #If flag == 2, the ncalibration end: last instruction is stop the laser
-        if self.calibrate_flag == 2:
-            byte_to_send = array.array('u', '{"L":0, "mode":0}')
-            self.calibrate_flag = 0
-        
+        #Try to write the file to the serial, else handle a serial exception,
+        #exit calibration, close port and display a message.
         try:
             self.write(string_to_send.encode('utf-8'))
+            self.wm.debug_append('>>> ' + string_to_send)
         except serial.SerialException:
             self.wm.toolbutton_calibrate.set_active(0)
             self.wm.message_erreur('Le port a été déconnecté',
                                    'Vérifiez la connexion au projecteur')
             self.calibrate_flag = 0
+            self.i = 0
             self.close()
+            return 1
         
-        self.i += 1
+        #Only if we are in a normal iteration (i.e. not stopping), increment self.i
+        if self.calibrate_flag == 1:
+            self.i += 1
+        #If end of calibration buffer, loop to start
         if self.i > 4:
             self.i = 1
+        #Used in the main loop: squeeze following main loop is set to 1
         return 1
     
     #This function sends the data to the board when the flag is on
@@ -86,7 +94,22 @@ class SerialLink(serial.Serial):
         #If the pause falg is set, don't do neither
         if self.pause_flag == 1:
             return
-    
+        
+        string_to_send = self.im.data_buffer[self.i]
+        byte_to_send = array.array('u', string_to_send)
+        
+        self.wm.debug_append('>>> ' + string_to_send)
+        
+        self.i += 1
+        
+        if self.i > len(self.im.data_buffer):
+            self.send_flag = 0
+            self.i = 0
+        if self.stop_flag == 1:
+            self.i = 0
+            self.send_flag = 0
+            self.stop_flag = 0
+            
     #This function reads raw data from the board
     def read_data(self):
         pass

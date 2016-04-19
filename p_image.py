@@ -27,7 +27,7 @@ class ImageObject:
         self.uri = None
         self.im = None
         self.thumb = None
-        self.compute_flag = 0
+        self.compute_flag = None
         
     #This function deals with openning a new file
     #it tries to open the file that URI points on, gives false if it can't
@@ -171,8 +171,13 @@ class ImageObject:
     #TODO: there is a problem with self.attributes when image is closed
     def compute_image(self, progressbar):
         #test the flag state before anything, return if 0
-        if self.compute_flag == 0:
+        if self.compute_flag != 1:
             return 0
+        #if first iteration since flag was set, initialise some datas
+        if self.pix_id == 0:
+            self.update_max_size()
+            self.update_ratio_pix_to_mm()
+            
         #get j and i (row index, col index) from the current pix id
         j = floor(self.pix_id / self.width)
         i = self.pix_id % self.width
@@ -211,5 +216,5 @@ class ImageObject:
             self.pix_id = 0
             self.compute_flag = 0
             progressbar.hide()
-        
+        print(len(self.data_buffer))
         return 1

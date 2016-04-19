@@ -28,14 +28,15 @@ serial_cfg = cfg.get_serial_cfg()
 ser = p_serial.SerialLink()
 #initiate it with value from configuration file
 ser.init_from_cfg(serial_cfg)
-ser.set_wm(wm)
+ser.wm = wm
 wm.status('Liaison série initialisée')
 
 #sets a link to the SerialLink object ser, so that vm can use it
-wm.set_serial(ser)
+wm.ser = ser
 #updates the port list and the baudrate list used in settings window
 wm.update_port_list(ser.get_ports(), ser.port)
 wm.update_baudrate_list(ser.get_baudrates(), ser.baudrate)
+wm.cfg = cfg
 wm.set_serial_cfg()
 wm.set_cfg(cfg)
 
@@ -44,11 +45,12 @@ jsp = p_jsonparser.JsonParser()
 
 #creates the imageObject class instance
 im = p_image.ImageObject()
-im.set_cfg(cfg)
-im.set_jsp(jsp)
+im.cfg = cfg
+im.jsp = jsp
+im.wm = wm
 #and attach it to the other objects
 ser.im = im
-wm.set_image(im)
+wm.im = im
 wm.status("gestionnaire d'image créé")
 wm.status('initialisation réussie')
 
@@ -59,4 +61,4 @@ while wm.running == 1:
         continue
     im.compute_image(wm.progress_total)
     ser.send_data()
-    ser.read_data()
+    ser.read_data() 

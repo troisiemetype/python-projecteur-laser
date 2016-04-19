@@ -32,8 +32,10 @@ class Window:
         self.window_settings = self.builder.get_object('windowSettings')
         self.window_file = self.builder.get_object('windowFile')
         self.statusbar = self.builder.get_object('statusbar1')
+        self.window_debug = self.builder.get_object('window_debug')
+        self.text_debug = self.builder.get_object('text_debug')
         
-        #attache the toolbuttons. We need them to set sensitive them on and off
+        #attach the toolbuttons. We need them to set sensitive them on and off
         self.toolbutton_open = self.builder.get_object('toolbutton_open')
         self.toolbutton_close = self.builder.get_object('toolbutton_close')
         
@@ -110,18 +112,11 @@ class Window:
         
         self.port_list_ok = 0
         self.baud_list_ok = 0
+        self.debug_flag = 1
         
         #Connect signals from the builder (mostly buttons clicks)
         self.builder.connect_signals(self)
         
-    #This function sets a link to the SerialLink object, so the GUI can use it
-    def set_serial(self, ser):
-        self.ser = ser
-   
-    #This function sets a link to the Image object, so the GUI can use it
-    def set_image(self, im):
-        self.im = im
-    
     #sets the cfg values from a serial object
     def set_serial_cfg(self):
         #populates the settings menu with values from settings file
@@ -132,7 +127,6 @@ class Window:
     
     #sets the cfg values for the image
     def set_cfg(self, cfg):
-        self.cfg = cfg
         
         self.support_distance.set_text(str(cfg.distance))
         self.support_width.set_text(str(cfg.support_width))
@@ -293,8 +287,6 @@ class Window:
         self.progress_total.show()
         self.status('Calcul en cours...')
         self.im.compute_flag = 1
-        self.im.update_max_size()
-        self.im.update_ratio_pix_to_mm()
         
         self.status('Image calculée, prête à être envoyée au projecteur.')
         
@@ -304,12 +296,13 @@ class Window:
         if self.ser.pause_flag == 1:
             self.toolbutton_pause.set_active(0)
         else:
+            self.im.compute_flag = 1
             self.ser.send_flag = 1
             self.set_gui_group('send', False)
             
     
     #defines the function for pausing data
-    def on_pause(self, widget):
+    def on_pause_toggle(self, widget):
         if widget.get_active():
             self.ser.pause_flag = 1
         else:
@@ -320,8 +313,17 @@ class Window:
         if self.ser.pause_flag == 1:
             self.toolbutton_pause.set_active(0)
         self.set_gui_group('send', True)
-        self.ser.send_flag = 0
+        self.ser.stop_flag = 1
         #need to add a (call to a) method that init the laser on 0
+    
+    #defines the function that handle the debug button
+    def on_debug_toggle(self, widget):
+        if widget.get_active():
+            self.debug_flag = 1
+            self.window_debug.set_visible(True)
+        else:
+            self.debug_flag = 0
+            self.window_debug.set_visible(False)
     
     #defines the function for updating port list
     def on_button_scan_clicked(self, widget):
@@ -371,7 +373,8 @@ class Window:
     def set_gui_group(self, mode, state):
         if mode == 'open':
             if state == True:
-                if not self.ser.is_open or self.im is None:
+                print(self.im.im)
+                if not self.ser.is_open or self.im.im is None:
                     return
             for tb in self.toolbutton_open_group:
                 tb.set_sensitive(state)
@@ -418,3 +421,18 @@ class Window:
     #defines the status update
     def status(self, status):
         self.statusbar.push(self.context_id, status)
+        self.debug_append('status: ' + status)
+        Gtk.main_iteration_do(False)
+    
+    #This function handles the debug printing
+    def debug_append(self, message):
+        if self.debug_flag == 0:
+            return
+        buffer = self.text_debug.get_buffer()
+        debut = buffer.get_start_iter()
+        fin = buffer.get_end_iter()
+        texte = buffer.get_text(debut, fin, True)
+        texte += message + '\n'
+        buffer.set_text(texte)
+        #self.text_debug.scroll_to_iter(buffer.get_end_iter(), 0, True, 0, 0)
+        Gtk.main_iteration_do(False)
