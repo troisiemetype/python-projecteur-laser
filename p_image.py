@@ -168,7 +168,6 @@ class ImageObject:
             
     #This computes a pixel of the picture, and append the value in a file
     #the main loop calls this on each iteration if the im.compute_flag is set
-    #TODO: there is a problem with self.attributes when image is closed
     def compute_image(self, progressbar):
         #test the flag state before anything, return if 0
         if self.compute_flag != 1:
@@ -216,5 +215,4 @@ class ImageObject:
             self.pix_id = 0
             self.compute_flag = 0
             progressbar.hide()
-        print(len(self.data_buffer))
         return 1

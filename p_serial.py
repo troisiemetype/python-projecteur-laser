@@ -96,12 +96,25 @@ class SerialLink(serial.Serial):
             return
         
         string_to_send = self.im.data_buffer[self.i]
-        byte_to_send = array.array('u', string_to_send)
+#        byte_to_send = array.array('u', string_to_send)
         
         self.wm.debug_append('>>> ' + string_to_send)
         
         self.i += 1
         
+        try:
+            self.write(string_to_send.encode('utf-8'))
+            self.wm.debug_append('>>> ' + string_to_send)
+        except serial.SerialException:
+            self.wm.message_erreur('Le port a été déconnecté',
+                                   'Vérifiez la connexion au projecteur')
+            self.data_flag = 0
+            self.i = 0
+            self.close()
+            return 1
+        except serial.SerialTimeoutException:
+            return 1
+             
         if self.i > len(self.im.data_buffer):
             self.send_flag = 0
             self.i = 0
@@ -112,5 +125,11 @@ class SerialLink(serial.Serial):
             
     #This function reads raw data from the board
     def read_data(self):
-        pass
+        if not self.is_open:
+            return
+        if self.in_waiting == 0:
+            return
+        
+        raw_data = self.readline()
+        print(raw_data.decode('utf-8'))
         

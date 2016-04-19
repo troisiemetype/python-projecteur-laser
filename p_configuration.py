@@ -20,7 +20,7 @@ class Configuration:
         self.databits = self.config.getint('serial', 'databits')
         self.parity = self.config.get('serial', 'parity')
         self.stopbits = self.config.getint('serial', 'stopbits')
-        self.timeout = self.config.getint('serial', 'timeout')
+        self.timeout = self.config.getfloat('serial', 'timeout')
         self.xonxoff = self.config.getboolean('serial', 'flowcontrolxon')
         
         #image attributes
@@ -78,7 +78,7 @@ class Configuration:
             else:
                 self.support_height = value
         elif attribute =='speed':
-            self.speed == value
+            self.speed = value
         return 0
                         
 

@@ -189,7 +189,6 @@ class Window:
     #defines the funcion that records entry in the support field
     #just calls the cfg.update_support_cfg() function, that verifies the values passed.
     def on_support_activate(self, widget, attribute=None, event=None):
-        print(event)
         answer = self.cfg.update_support_value(attribute, int(widget.get_text()))
         if answer != 0:
             self.message_erreur('Valeur maximale permise: %s'%answer,
@@ -340,7 +339,20 @@ class Window:
     #defines the function for validating settings
     #TODO: find how to link it with the cfg save
     def on_settings_ok_clicked(self, widget):
-        #cfg.save()
+        #cfg.save()     
+        tree_iter = self.port.get_active_iter()
+        if tree_iter != None:
+            model = self.port.get_model()
+            row_id, name = model[tree_iter][:2]
+            self.ser.port = name
+            
+        tree_iter = self.baudrate.get_active_iter()
+        if tree_iter != None:
+            model = self.baudrate.get_model()
+            name = model[tree_iter][:1]
+            print(name)
+            self.ser.baudrate = int(name[0])
+
         self.window_settings.hide()
         self.window_main.set_sensitive(True)
         

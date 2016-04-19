@@ -490,7 +490,6 @@
                 <property name="label" translatable="yes">toolbutton6</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-file</property>
-                <property name="active">True</property>
                 <signal name="toggled" handler="on_debug_toggle" swapped="no"/>
               </object>
               <packing>
@@ -602,7 +601,6 @@
                         <property name="can_focus">True</property>
                         <property name="tooltip_text" translatable="yes">millimètres/seconde
 Vitesse de balayage</property>
-                        <property name="max_length">4</property>
                         <property name="input_purpose">digits</property>
                       </object>
                       <packing>
@@ -618,7 +616,6 @@ Vitesse de balayage</property>
                         <property name="can_focus">True</property>
                         <property name="tooltip_text" translatable="yes">millimètres
 Hauteur du support</property>
-                        <property name="max_length">4</property>
                         <property name="input_purpose">digits</property>
                       </object>
                       <packing>
@@ -634,7 +631,6 @@ Hauteur du support</property>
                         <property name="can_focus">True</property>
                         <property name="tooltip_text" translatable="yes">millimètres
 Largeur du support</property>
-                        <property name="max_length">4</property>
                         <property name="input_purpose">digits</property>
                       </object>
                       <packing>
@@ -650,7 +646,6 @@ Largeur du support</property>
                         <property name="can_focus">True</property>
                         <property name="tooltip_text" translatable="yes">millimètres
 Distance entre le projecteur et le support</property>
-                        <property name="max_length">4</property>
                         <property name="input_purpose">digits</property>
                       </object>
                       <packing>
@@ -732,7 +727,6 @@ Distance entre le projecteur et le support</property>
                         <property name="can_focus">True</property>
                         <property name="tooltip_text" translatable="yes">millimètres
 Hauteur de l'image</property>
-                        <property name="max_length">4</property>
                         <property name="input_purpose">digits</property>
                       </object>
                       <packing>
@@ -748,7 +742,6 @@ Hauteur de l'image</property>
                         <property name="can_focus">True</property>
                         <property name="tooltip_text" translatable="yes">millimètres
 Largeur de l'image</property>
-                        <property name="max_length">4</property>
                         <property name="input_purpose">digits</property>
                       </object>
                       <packing>
@@ -1102,7 +1095,6 @@ Largeur de l'image</property>
   <object class="GtkWindow" id="window_debug">
     <property name="width_request">400</property>
     <property name="height_request">250</property>
-    <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="type_hint">utility</property>
     <signal name="delete-event" handler="on_delete_event" swapped="no"/>
