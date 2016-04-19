@@ -27,7 +27,7 @@ class ImageObject:
         self.uri = None
         self.im = None
         self.thumb = None
-        self.calibration_flag = 0
+        self.compute_flag = 0
         
     #This function deals with openning a new file
     #it tries to open the file that URI points on, gives false if it can't
@@ -50,7 +50,6 @@ class ImageObject:
         self.cur_row = 0
         self.cur_col = 0
         self.compute_flag = 0
-        self.calibration_flag = 0
         self.data_buffer = []
         self.calibration_buffer = []
         return True
@@ -166,20 +165,14 @@ class ImageObject:
         self.calibration_buffer.append(corner)
         corner = self.jsp.to_json(5, -x_pos, -y_pos, 0, 0, 0)
         self.calibration_buffer.append(corner)
-        
-        self.i = 0
-        
-        print(self.calibration_buffer)
-        
-    #this reads the the coordinates for the calibration movement in a circular movement
-    def send_calibration(self):
-        self.i %= 4
-        self.calibration_buffer[self.i]
-        self.i += 1
-    
+            
     #This computes a pixel of the picture, and append the value in a file
     #the main loop calls this on each iteration if the im.compute_flag is set
+    #TODO: there is a problem with self.attributes when image is closed
     def compute_image(self, progressbar):
+        #test the flag state before anything, return if 0
+        if self.compute_flag == 0:
+            return 0
         #get j and i (row index, col index) from the current pix id
         j = floor(self.pix_id / self.width)
         i = self.pix_id % self.width
@@ -218,3 +211,5 @@ class ImageObject:
             self.pix_id = 0
             self.compute_flag = 0
             progressbar.hide()
+        
+        return 1

@@ -236,8 +236,7 @@ class Window:
         self.image_dimensions.hide()
         self.status('Image %s fermée'%self.im.uri)
         self.im.close_file()
-        for tb in self.toolbutton_open_group:
-            tb.set_sensitive(False)
+        self.set_gui_group(open, False)
     
     #defines the function for preferences
     def on_settings(self, widget):
@@ -253,9 +252,7 @@ class Window:
         #try to connect to the port
         try:
             self.ser.open()
-            #if self.im.im != None:
-                #for item in self.toolbutton_open_group:
-                    #item.set_sensitive(True)
+            self.set_gui_group('open', True)
             self.status('Connecté à %s' %self.ser.port)
         #else catch an exception and display an error message
         except SerialException:
@@ -273,8 +270,7 @@ class Window:
             return
         self.ser.close()
         
-        #for item in self.toolbutton_open_group:
-            #item.set_sensitive(False)
+        self.set_gui_group('open', False)
      
         self.status('déconnecté')
     
@@ -282,22 +278,17 @@ class Window:
     def on_calibrate_toggle(self, widget):
         #If the button is active, then start the calibration
         if widget.get_active():
-            self.support_dimensions.set_sensitive(False)
-            self.image_dimensions.set_sensitive(False)
-            for tb in self.toolbutton_compute_group:
-                tb.set_sensitive(False)
-            self.im.calibration_flag = 1
+            self.set_gui_group('compute', False)
+            self.ser.calibrate_flag = 1
             self.im.calibrate()
             
         #else it's not, so stop the calibration
         else:
-            self.support_dimensions.set_sensitive(True)
-            self.image_dimensions.set_sensitive(True)
-            for tb in self.toolbutton_compute_group:
-                tb.set_sensitive(True)
-            self.im.calibration_flag = 2
+            self.set_gui_group('compute', True)
+            self.ser.calibrate_flag = 2
             
     #defines the compute function
+    #TODO: find a way to de-activate groups when computing, but they re-activate when done
     def on_compute(self, widget):
         self.progress_total.show()
         self.status('Calcul en cours...')
@@ -314,8 +305,7 @@ class Window:
             self.toolbutton_pause.set_active(0)
         else:
             self.ser.send_flag = 1
-            for tb in self.toolbutton_send_group:
-                tb.set_sensitive(False)
+            self.set_gui_group('send', False)
             
     
     #defines the function for pausing data
@@ -329,8 +319,7 @@ class Window:
     def on_stop(self, widget):
         if self.ser.pause_flag == 1:
             self.toolbutton_pause.set_active(0)
-        for tb in self.toolbutton_send_group:
-            tb.set_sensitive(True)
+        self.set_gui_group('send', True)
         self.ser.send_flag = 0
         #need to add a (call to a) method that init the laser on 0
     
@@ -359,16 +348,13 @@ class Window:
         self.window_main.set_sensitive(True)
         
     #defines the function that handles opening file
-    #TODO: look at how to link it with the file openning
     def on_file_ok_clicked(self, widget):
         if self.im.open_file(self.window_file.get_filename()):
-            #if self.ser.is_open:
-                #for tb in self.toolbutton_open_group:
-                    #tb.set_sensitive(True)
             self.window_main.set_sensitive(True)
             self.window_file.hide()
             self.image.set_from_pixbuf(self.im.get_pixbuf())
             self.image_dimensions.show()
+            self.set_gui_group('open', True)
             self.status('Image %s ouverte'%self.im.uri)
     
     #defines the function that handles openning file
@@ -381,6 +367,27 @@ class Window:
         if event.keyval == Gdk.KEY_Return:
             self.on_file_ok_clicked(widget)
     
+    #Show / hide, activate / de-activate the GUI areas
+    def set_gui_group(self, mode, state):
+        if mode == 'open':
+            if state == True:
+                if not self.ser.is_open or self.im is None:
+                    return
+            for tb in self.toolbutton_open_group:
+                tb.set_sensitive(state)
+        elif mode == 'compute':
+            for tb in self.toolbutton_compute_group:
+                tb.set_sensitive(state)
+            self.support_dimensions.set_sensitive(state)
+            self.image_dimensions.set_sensitive(state)
+            
+            
+        elif mode == 'send':
+            for tb in self.toolbutton_send_group:
+                tb.set_sensitive(state)
+            self.support_dimensions.set_sensitive(state)
+            self.image_dimensions.set_sensitive(state)
+            
     #defines the basic error message
     def message_erreur(self, message='', secondary=None):
         dialog = Gtk.MessageDialog(self.window_main, Gtk.DialogFlags.MODAL,

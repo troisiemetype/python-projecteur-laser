@@ -17,6 +17,7 @@ class SerialLink(serial.Serial):
     def __init__(self):
         serial.Serial.__init__(self)
         self.im = None
+        self.calibrate_flag = 0
         self.send_flag = 0
         self.pause_flag = 0
         self.data_flag = 0
@@ -32,6 +33,10 @@ class SerialLink(serial.Serial):
         self.stopbits = cfg['stopbits']
         self.timeout = cfg['timeout']
         self.xonxoff = cfg['xonxoff']
+    
+    #This attach the wm object to the serial object
+    def set_wm(self, wm):
+        self.wm = wm
     
     #This lists the ports available
     def get_ports(self):
@@ -49,15 +54,40 @@ class SerialLink(serial.Serial):
     
     #This function sends the calibration string when the flag is on
     def send_calibration(self):
-        if self.im.calibration_flag == 0:
-            return
+        if self.calibrate_flag == 0:
+            return 0
         string_to_send = self.im.calibration_buffer[self.i]
         byte_to_send = array.array('u', string_to_send)
-        self.write(string_to_send.encode('utf-8'))
+        
+        #If flag == 2, the ncalibration end: last instruction is stop the laser
+        if self.calibrate_flag == 2:
+            byte_to_send = array.array('u', '{"L":0, "mode":0}')
+            self.calibrate_flag = 0
+        
+        try:
+            self.write(string_to_send.encode('utf-8'))
+        except serial.SerialException:
+            self.wm.toolbutton_calibrate.set_active(0)
+            self.wm.message_erreur('Le port a été déconnecté',
+                                   'Vérifiez la connexion au projecteur')
+            self.calibrate_flag = 0
+            self.close()
         
         self.i += 1
         if self.i > 4:
             self.i = 1
-        if self.im.calibration_flag == 2:
-            self.write('{"L":0, "mode":0}'.encode())
-            self.im.calibration_flag = 0
+        return 1
+    
+    #This function sends the data to the board when the flag is on
+    def send_data(self):
+        #Don't do anything if the send flag is not set.
+        if self.send_flag == 0:
+            return
+        #If the pause falg is set, don't do neither
+        if self.pause_flag == 1:
+            return
+    
+    #This function reads raw data from the board
+    def read_data(self):
+        pass
+        

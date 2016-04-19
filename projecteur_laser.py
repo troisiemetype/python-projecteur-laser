@@ -28,6 +28,7 @@ serial_cfg = cfg.get_serial_cfg()
 ser = p_serial.SerialLink()
 #initiate it with value from configuration file
 ser.init_from_cfg(serial_cfg)
+ser.set_wm(wm)
 wm.status('Liaison série initialisée')
 
 #sets a link to the SerialLink object ser, so that vm can use it
@@ -54,10 +55,8 @@ wm.status('initialisation réussie')
 #Main loop. Calls the window refresh on each iteration
 while wm.running == 1:
     Gtk.main_iteration_do(False)
-    ser.send_calibration()
-
-    try:
-        if im.compute_flag == 1:
-            im.compute_image(wm.progress_total)
-    except:
-        pass
+    if ser.send_calibration():
+        continue
+    im.compute_image(wm.progress_total)
+    ser.send_data()
+    ser.read_data()
