@@ -104,6 +104,7 @@ class Window:
         self.image_width.connect('activate', self.on_image_activate, 'image_width')
         self.image_height.connect('activate', self.on_image_activate, 'image_height')
         
+        self.progress_compute = self.builder.get_object('progress_compute')
         self.progress_total = self.builder.get_object('progress_total')
         self.progress_step = self.builder.get_object('progress_step')
 
@@ -246,7 +247,7 @@ class Window:
         try:
             self.ser.open()
             self.set_gui_group('open', True)
-            self.status('Connecté à %s' %self.ser.port)
+            self.status('Connecté à %s, baudrate: %s' %(self.ser.port, self.ser.baudrate))
         #else catch an exception and display an error message
         except SerialException:
             self.message_erreur('Erreur de connexion',
@@ -283,7 +284,7 @@ class Window:
     #defines the compute function
     #TODO: find a way to de-activate groups when computing, but they re-activate when done
     def on_compute(self, widget):
-        self.progress_total.show()
+        self.progress_compute.show()
         self.status('Calcul en cours...')
         self.im.compute_flag = 1
         
@@ -299,6 +300,10 @@ class Window:
             self.ser.send_flag = 1
             self.set_gui_group('send', False)
             
+            self.progress_compute.show()
+            self.progress_total.show()
+            self.progress_step.show()            
+        
     
     #defines the function for pausing data
     def on_pause_toggle(self, widget):
@@ -350,7 +355,6 @@ class Window:
         if tree_iter != None:
             model = self.baudrate.get_model()
             name = model[tree_iter][:1]
-            print(name)
             self.ser.baudrate = int(name[0])
 
         self.window_settings.hide()
@@ -385,7 +389,6 @@ class Window:
     def set_gui_group(self, mode, state):
         if mode == 'open':
             if state == True:
-                print(self.im.im)
                 if not self.ser.is_open or self.im.im is None:
                     return
             for tb in self.toolbutton_open_group:

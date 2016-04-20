@@ -42,6 +42,7 @@ wm.set_cfg(cfg)
 
 #Creates the json parser class instance
 jsp = p_jsonparser.JsonParser()
+ser.jsp = jsp
 
 #creates the imageObject class instance
 im = p_image.ImageObject()
@@ -59,6 +60,6 @@ while wm.running == 1:
     Gtk.main_iteration_do(False)
     if ser.send_calibration():
         continue
-    im.compute_image(wm.progress_total)
+    im.compute_image(wm.progress_compute)
     ser.send_data()
     ser.read_data() 

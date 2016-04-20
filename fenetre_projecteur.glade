@@ -759,6 +759,17 @@ Largeur de l'image</property>
                   </packing>
                 </child>
                 <child>
+                  <object class="GtkProgressBar" id="progress_compute">
+                    <property name="can_focus">False</property>
+                    <property name="show_text">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+                <child>
                   <object class="GtkProgressBar" id="progress_total">
                     <property name="can_focus">False</property>
                     <property name="fraction">2.2351741811588166e-10</property>
@@ -767,7 +778,7 @@ Largeur de l'image</property>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
-                    <property name="position">2</property>
+                    <property name="position">3</property>
                   </packing>
                 </child>
                 <child>
@@ -778,7 +789,7 @@ Largeur de l'image</property>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
-                    <property name="position">3</property>
+                    <property name="position">4</property>
                   </packing>
                 </child>
               </object>
