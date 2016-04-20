@@ -126,7 +126,7 @@ class SerialLink(serial.Serial):
             print('timeout')
             return 1
              
-        if self.i > len(self.im.data_buffer):
+        if self.i >= len(self.im.data_buffer):
             self.send_flag = 0
             self.i = 0
         if self.stop_flag == 1:

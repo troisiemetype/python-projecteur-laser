@@ -17,6 +17,10 @@ class JsonParser(json.JSONEncoder, json.JSONDecoder):
     
     #This function split the json chain received from the arduino into vars.
     def from_json(self, json):
-        dict_data = self.decode(json)
-        return dict_data
+        try:
+            dict_data = self.decode(json)
+            return dict_data
+        except ValueError:
+            print('incoming value error')
+        
         

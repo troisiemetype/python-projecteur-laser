@@ -49,6 +49,7 @@ im = p_image.ImageObject()
 im.cfg = cfg
 im.jsp = jsp
 im.wm = wm
+im.ser = ser
 #and attach it to the other objects
 ser.im = im
 wm.im = im

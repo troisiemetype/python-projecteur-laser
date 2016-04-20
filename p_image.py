@@ -50,6 +50,7 @@ class ImageObject:
         self.cur_row = 0
         self.cur_col = 0
         self.compute_flag = 0
+        self.line_change_flag = 0
         self.data_buffer = []
         self.calibration_buffer = []
         return True
@@ -96,6 +97,7 @@ class ImageObject:
     
     #This function transformates the size in pixels into millimeters
     def update_ratio_pix_to_mm(self):
+        #depending of the orientation of the picture, we take the biggest size to minimize rouding errors.
         if self.ratio > 1:
             self.ratio_pix_mm = self.cfg.width / self.width
         else:
@@ -176,10 +178,18 @@ class ImageObject:
         if self.pix_id == 0:
             self.update_max_size()
             self.update_ratio_pix_to_mm()
+            self.ser.pause_flag = 1
+        #Let the compute image run a few times before to enable serial sending.
+        if self.pix_id > 5:
+            self.ser.pause_flag = 0
             
         #get j and i (row index, col index) from the current pix id
         j = floor(self.pix_id / self.width)
         i = self.pix_id % self.width
+        
+        #detect and of a line, to manage the line change
+        if i == self.width - 1:
+            line_change_flag = 1
         
         #get the value of the current pixel
         pix_value = mean(self.im.getpixel((i,j)))
@@ -197,11 +207,19 @@ class ImageObject:
         #Transform this angle into projector value
         x_pos, y_pos = self.get_serial_pos((x_pos, y_pos))
         
-        #call the json_creator
+        #Call the json_creator and add the line to buffer.
+        #If line_change_flag is set, create a json string for this mosition, laser cut, mode 0.
+        if i == 0:
+            json_string = self.jsp.to_json(self.pix_id, x_pos, y_pos, 0, self.cfg.speed, 0)
+            self.data_buffer.append(json_string)
+        # Current position. 
         json_string = self.jsp.to_json(self.pix_id, x_pos, y_pos, laser_pos, self.cfg.speed, 1)
-        
-        #and add it to the buffer
         self.data_buffer.append(json_string)
+        # If end of line, first shut the laser out.
+        if i == self.width - 1:
+            json_string = self.jsp.to_json(self.pix_id, x_pos, y_pos, 0, self.cfg.speed, 0)
+            self.data_buffer.append(json_string)
+            
 
         #increment the pixel id
         self.pix_id += 1
