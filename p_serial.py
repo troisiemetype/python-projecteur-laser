@@ -13,6 +13,10 @@ from serial.tools import list_ports
 import array
 
 class SerialLink(serial.Serial):
+    #class attributes
+    im = None
+    jsp = None
+    wm = None
     #init the class with the parent class constructor
     def __init__(self):
         serial.Serial.__init__(self)
@@ -60,11 +64,11 @@ class SerialLink(serial.Serial):
         if self.send_ok_flag == 0:
             return
         
-        string_to_send = self.im.calibration_buffer[self.i]
+        string_to_send = SerialLink.im.calibration_buffer[self.i]
         
         #If flag == 2, the calibration ends: last instruction is stop the laser
         if self.calibrate_flag == 2:
-            string_to_send = self.im.calibration_buffer[5]
+            string_to_send = SerialLink.im.calibration_buffer[5]
             self.i = 0
             self.calibrate_flag = 0
             
@@ -74,11 +78,11 @@ class SerialLink(serial.Serial):
         #exit calibration, close port and display a message.
         try:
             self.write(string_to_send.encode('utf-8'))
-            self.wm.debug_append('>>> ' + string_to_send)
+            SerialLink.wm.debug_append('>>> ' + string_to_send)
             self.send_ok_flag = 0
         except serial.SerialException:
-            self.wm.toolbutton_calibrate.set_active(0)
-            self.wm.message_erreur('Le port a été déconnecté',
+            SerialLink.wm.toolbutton_calibrate.set_active(0)
+            SerialLink.wm.message_erreur('Le port a été déconnecté',
                                    'Vérifiez la connexion au projecteur')
             self.calibrate_flag = 0
             self.i = 0
@@ -105,18 +109,18 @@ class SerialLink(serial.Serial):
         #If the board hasn't asked for datas
         if self.send_ok_flag == 0:
             return
-        string_to_send = self.im.data_buffer[self.i]
+        string_to_send = SerialLink.im.data_buffer[self.i]
       
-        self.wm.debug_append('>>> ' + string_to_send)
+        SerialLink.wm.debug_append('>>> ' + string_to_send)
         
         self.i += 1
         
         try:
             self.write(string_to_send.encode('utf-8'))
-            self.wm.debug_append('>>> ' + string_to_send)
+            SerialLink.wm.debug_append('>>> ' + string_to_send)
             self.send_ok_flag = 0
         except serial.SerialException:
-            self.wm.message_erreur('Le port a été déconnecté',
+            SerialLink.wm.message_erreur('Le port a été déconnecté',
                                    'Vérifiez la connexion au projecteur')
             self.data_flag = 0
             self.i = 0
@@ -126,7 +130,7 @@ class SerialLink(serial.Serial):
             print('timeout')
             return 1
              
-        if self.i >= len(self.im.data_buffer):
+        if self.i >= len(SerialLink.im.data_buffer):
             self.send_flag = 0
             self.i = 0
         if self.stop_flag == 1:
@@ -143,8 +147,11 @@ class SerialLink(serial.Serial):
         
         data = {}
         raw_data = self.readline()
-        data = self.jsp.from_json(raw_data.decode('utf-8'))
-        print(data)
+        data = SerialLink.jsp.from_json(raw_data.decode('utf-8'))
+        #TODO: handle error raised by the json parser.
+        if type(data) is not dict:
+            print('erreur transmise')
+            return
             
         send_flag = data.get('send')
         if send_flag == 1:
@@ -152,8 +159,10 @@ class SerialLink(serial.Serial):
             
         progress = data.get('progress')
         if progress != None:
-            self.wm.progress_step.set_fraction(progress)
-            self.wm.progress_total.set_fraction(data.get('ID')/self.im.pix_qty)
+            SerialLink.wm.progress_step.set_fraction(progress)
+            SerialLink.wm.progress_total.set_fraction(data.get('ID')/SerialLink.im.pix_qty)
 
-        
+        message = data.get('message')
+        if message != None:
+            print(message)
         

@@ -6,29 +6,29 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
 #program classes (like includes)
-import p_configuration
-import p_serial
-import p_window
-import p_jsonparser
-import p_image
+from p_configuration import Configuration as conf
+from p_serial import SerialLink as serial
+from p_window import Window as win
+from p_jsonparser import JsonParser as json
+from p_image import ImageObject as image
 
 #instanciate classes,
 #display the GUI
 #creates the Window class instance
-wm = p_window.Window()
+wm = win()
 
 #creates the Configuration class instance
-cfg = p_configuration.Configuration('config_default.cfg')   
+cfg = conf('config_default.cfg')   
 #displays a status
 wm.status('Fichier de configuration chargé.')
 #get the serial configuration
 serial_cfg = cfg.get_serial_cfg()
 
 #creates the SerialLink class instance
-ser = p_serial.SerialLink()
+ser = serial()
 #initiate it with value from configuration file
 ser.init_from_cfg(serial_cfg)
-ser.wm = wm
+serial.wm = wm
 wm.status('Liaison série initialisée')
 
 #sets a link to the SerialLink object ser, so that vm can use it
@@ -41,17 +41,17 @@ wm.set_serial_cfg()
 wm.set_cfg(cfg)
 
 #Creates the json parser class instance
-jsp = p_jsonparser.JsonParser()
-ser.jsp = jsp
+jsp = json()
+serial.jsp = jsp
 
 #creates the imageObject class instance
-im = p_image.ImageObject()
-im.cfg = cfg
-im.jsp = jsp
-im.wm = wm
-im.ser = ser
+im = image()
+image.cfg = cfg
+image.jsp = jsp
+image.wm = wm
+image.ser = ser
 #and attach it to the other objects
-ser.im = im
+serial.im = im
 wm.im = im
 wm.status("gestionnaire d'image créé")
 wm.status('initialisation réussie')

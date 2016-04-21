@@ -19,6 +19,7 @@ class ImageObject:
     #This three are links to other class used by the main program.
     #These are class attributes.
     #That way when lcosing a file, attributes are cleared but those stays
+    ser = None
     cfg = None
     jsp = None
     wm = None
@@ -63,7 +64,7 @@ class ImageObject:
             
     #defines the function that get values from the cfg file
     def set_cfg(self, cfg):
-        self.cfg = cfg
+        ImageObject.cfg = cfg
         
     #defines the function that get a link to the json class
     def set_jsp(self, jsp):
@@ -91,17 +92,17 @@ class ImageObject:
     def update_max_size(self):
         #h_angle & v_angle in degrees, length in mm
         #2 * distance * tan(angle balayage)
-        self.max_width = int(2 * self.cfg.distance * tan(radians(self.cfg.h_angle)))
-        self.max_height = int(2 * self.cfg.distance * tan(radians(self.cfg.v_angle)))
+        self.max_width = int(2 * ImageObject.cfg.distance * tan(radians(ImageObject.cfg.h_angle)))
+        self.max_height = int(2 * ImageObject.cfg.distance * tan(radians(ImageObject.cfg.v_angle)))
         return self.max_width, self.max_height
     
     #This function transformates the size in pixels into millimeters
     def update_ratio_pix_to_mm(self):
         #depending of the orientation of the picture, we take the biggest size to minimize rouding errors.
         if self.ratio > 1:
-            self.ratio_pix_mm = self.cfg.width / self.width
+            self.ratio_pix_mm = ImageObject.cfg.width / self.width
         else:
-            self.ratio_pix_mm = self.cfg.height / self.height
+            self.ratio_pix_mm = ImageObject.cfg.height / self.height
     
     #This functions get the angle value from the millimeters value
     #the pos argument is the position, in mm, from center.
@@ -113,8 +114,8 @@ class ImageObject:
         
         #sets the angle value
         #angle = atan(support width * tan(angle balayage)/max width)        
-        x_angle = atan((x_pos * tan(radians(self.cfg.h_angle))) / (self.max_width / 2))
-        y_angle = atan((y_pos * tan(radians(self.cfg.v_angle))) / (self.max_height / 2))
+        x_angle = atan((x_pos * tan(radians(ImageObject.cfg.h_angle))) / (self.max_width / 2))
+        y_angle = atan((y_pos * tan(radians(ImageObject.cfg.v_angle))) / (self.max_height / 2))
              
         return x_angle, y_angle
     
@@ -127,8 +128,8 @@ class ImageObject:
         angle_value_max = 2**15
         
         #calculate the angle ratio between the current value and the max value
-        angle_ratio_width = degrees(angle_width) / self.cfg.v_angle
-        angle_ratio_height = degrees(angle_height) / self.cfg.h_angle
+        angle_ratio_width = degrees(angle_width) / ImageObject.cfg.v_angle
+        angle_ratio_height = degrees(angle_height) / ImageObject.cfg.h_angle
     
         #calculate the final angle value, using the max value and the ratio
         x_angle = int(angle_value_max * angle_ratio_width)
@@ -149,8 +150,8 @@ class ImageObject:
         #get max size
         self.update_max_size()
         #get angle for this position
-        angle_width, angle_height = self.get_angle_value((self.cfg.support_width/2,
-                                                    self.cfg.support_height/2))
+        angle_width, angle_height = self.get_angle_value((ImageObject.cfg.support_width/2,
+                                                    ImageObject.cfg.support_height/2))
         x_pos, y_pos = self.get_serial_pos((angle_width, angle_height))
         
         l_pos = 25000
@@ -171,6 +172,8 @@ class ImageObject:
     #This computes a pixel of the picture, and append the value in a file
     #the main loop calls this on each iteration if the im.compute_flag is set
     def compute_image(self, progressbar):
+        #TODO: verifies if computation has already been donne before.
+        #Do it only if settings have been changed.
         #test the flag state before anything, return if 0
         if self.compute_flag != 1:
             return 0
@@ -210,14 +213,14 @@ class ImageObject:
         #Call the json_creator and add the line to buffer.
         #If line_change_flag is set, create a json string for this mosition, laser cut, mode 0.
         if i == 0:
-            json_string = self.jsp.to_json(self.pix_id, x_pos, y_pos, 0, self.cfg.speed, 0)
+            json_string = self.jsp.to_json(self.pix_id, x_pos, y_pos, 0, ImageObject.cfg.speed, 0)
             self.data_buffer.append(json_string)
         # Current position. 
-        json_string = self.jsp.to_json(self.pix_id, x_pos, y_pos, laser_pos, self.cfg.speed, 1)
+        json_string = self.jsp.to_json(self.pix_id, x_pos, y_pos, laser_pos, ImageObject.cfg.speed, 1)
         self.data_buffer.append(json_string)
         # If end of line, first shut the laser out.
         if i == self.width - 1:
-            json_string = self.jsp.to_json(self.pix_id, x_pos, y_pos, 0, self.cfg.speed, 0)
+            json_string = self.jsp.to_json(self.pix_id, x_pos, y_pos, 0, ImageObject.cfg.speed, 0)
             self.data_buffer.append(json_string)
             
 

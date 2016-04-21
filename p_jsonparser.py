@@ -20,7 +20,8 @@ class JsonParser(json.JSONEncoder, json.JSONDecoder):
         try:
             dict_data = self.decode(json)
             return dict_data
-        except ValueError:
-            print('incoming value error')
+        except ValueError as error:
+            print('value error')
+            return error 
         
         
