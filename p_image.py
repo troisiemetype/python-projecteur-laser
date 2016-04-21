@@ -1,4 +1,4 @@
-from PIL import Image
+from PIL import Image, ImageChops
 from math import *
 from statistics import mean
 
@@ -46,15 +46,36 @@ class ImageObject:
         self.ratio = float(self.width/self.height)
         self.thumb = self.im.copy()
         self.thumb.thumbnail((450, int(450/self.ratio)))
+        
+        #Compute black and white and inverted image
+        self.im = self.im.convert('L')
+        self.im_invert = ImageChops.invert(self.im)
+        
+        #Init the values used in the calc 'loops'.
         self.pix_qty =  self.width * self.height
         self.pix_id = 0
         self.cur_row = 0
         self.cur_col = 0
+        self.mode = 1
+        
+        #Init/update the values from the settings
+        self.half_width = self.width / 2
+        self.half_height = self.height / 2
+        self.tan_h_scan = tan(radians(ImageObject.cfg.h_angle))
+        self.tan_v_scan = tan(radians(ImageObject.cfg.v_angle))
+        #sets the max angle increment (half of 16 bits)
+        self.angle_value_max = 2**15
+        
+        
+        #Init the flags and buffers.
+        self.inverted_flag = 0
         self.compute_flag = 0
         self.computed_flag = 0
         self.line_change_flag = 0
         self.data_buffer = []
         self.calibration_buffer = []
+        
+        #Display the status informations.
         self.name = self.uri.split('/')
         self.name = self.name.pop()
         ImageObject.wm.status('%s, %sx%s pixels'%(self.name,self.width, self.height),
@@ -62,26 +83,18 @@ class ImageObject:
         return True
     
     #this function "closes" the file that was open.
-    #It simply clears all the instance attributes of self.
+    #It simply clears all the instance attributes.
     def close_file(self):
         ImageObject.wm.status('fermée', 'file')
         for item in self.__dict__:
             self.__setattr__(item, None)
             
-    #defines the function that get values from the cfg file
-    def set_cfg(self, cfg):
-        ImageObject.cfg = cfg
-        
-    #defines the function that get a link to the json class
-    def set_jsp(self, jsp):
-        self.jsp = jsp
-
     #this function converts PIL images to Pixbuf format for displaying in Gtk
     def get_pixbuf(self):
         #transforms the given image into an array of pixels
         arr = array.array('B', self.thumb.tobytes())
         w,h = self.thumb.size
-        #look at a an alpha mask
+        #look for an alpha mask
         if self.thumb.mode == 'RGBA':
             hasAlpha = True
             dist = w*4
@@ -93,13 +106,13 @@ class ImageObject:
         #width, height, distance in bytes between row starts
         return GdkPixbuf.Pixbuf.new_from_data(arr, GdkPixbuf.Colorspace.RGB,
                                               hasAlpha, 8, w, h, dist)
-    
-    #this functions calculates the max size, according to the distance of the support
+    #This function updates the values  
+    #this function calculates the max size, according to the distance of the support
     def update_max_size(self):
         #h_angle & v_angle in degrees, length in mm
         #2 * distance * tan(angle balayage)
-        self.max_width = int(2 * ImageObject.cfg.distance * tan(radians(ImageObject.cfg.h_angle)))
-        self.max_height = int(2 * ImageObject.cfg.distance * tan(radians(ImageObject.cfg.v_angle)))
+        self.max_width = int(2 * ImageObject.cfg.distance * self.tan_h_scan)
+        self.max_height = int(2 * ImageObject.cfg.distance * self.tan_v_scan)
         return self.max_width, self.max_height
     
     #This function transformates the size in pixels into millimeters
@@ -110,48 +123,40 @@ class ImageObject:
         else:
             self.ratio_pix_mm = ImageObject.cfg.height / self.height
     
-    #This functions get the angle value from the millimeters value
+    #This function get the angle value from the millimeters value
     #the pos argument is the position, in mm, from center.
     #So it can hold negative values. In fact it does, half the time.
     #the angle returned is in radians
-    def get_angle_value(self, pos):
-        x_pos = pos[0]
-        y_pos = pos[1]
-        
+    def get_angle_value(self, pos, axe):
         #sets the angle value
-        #angle = atan(support width * tan(angle balayage)/max width)        
-        x_angle = atan((x_pos * tan(radians(ImageObject.cfg.h_angle))) / (self.max_width / 2))
-        y_angle = atan((y_pos * tan(radians(ImageObject.cfg.v_angle))) / (self.max_height / 2))
-             
-        return x_angle, y_angle
-    
+        #angle = atan(support width * tan(angle balayage))/max width  
+        if axe == 'x':
+            return atan(pos * self.tan_h_scan / self.half_width)
+        if axe == 'y':
+            return atan(pos * self.tan_v_scan / self.half_height)
+                 
     #This function calculates the position to send to the projector, given the angle
-    def get_serial_pos(self, angle):
-        angle_width = angle[0]
-        angle_height = angle[1]
-        
-        #sets the max angle increment (half of 16 bits)
-        angle_value_max = 2**15
-        
-        #calculate the angle ratio between the current value and the max value
-        angle_ratio_width = degrees(angle_width) / ImageObject.cfg.v_angle
-        angle_ratio_height = degrees(angle_height) / ImageObject.cfg.h_angle
-    
-        #calculate the final angle value, using the max value and the ratio
-        x_angle = int(angle_value_max * angle_ratio_width)
-        y_angle = int(angle_value_max * angle_ratio_height)
-               
-        return x_angle, y_angle
+    def get_serial_pos(self, angle, axe):
+                
+        #calculates the angle ratio between the current value and the max value
+        if axe == 'x':
+            angle_ratio = degrees(angle) / ImageObject.cfg.h_angle
+        elif axe == 'y':
+            angle_ratio = degrees(angle) / ImageObject.cfg.v_angle
+        #then calculates the final angle value, using the max value and the ratio
+        return int(self.angle_value_max * angle_ratio)
+
     
     def get_laser_pos(self, value):
         #sets the max value (16 bits)
         value_max = 2**16
         
-        return int(value_max - 256*(value + 1))
+        return int(value_max * value / 256)
     
     #This function calculates the calibrating rectangle.
     #It's called on the calibration button toggle.
     #TODO: add a cfg parameter for the laser intensity during calibrating
+    #TODO: modify the call to jsonparser, to send a dictionnary instead of several values.
     def calibrate(self):
         #get max size
         self.update_max_size()
@@ -190,11 +195,12 @@ class ImageObject:
             self.update_max_size()
             self.update_ratio_pix_to_mm()
             self.ser.pause_flag = 1
+            self.pv_pix = (None, None, None)
             ImageObject.wm.progress_compute.show()
             ImageObject.wm.status('Calcul en cours...')
             
         #Let the compute image run a few times before to enable serial sending.
-        if self.pix_id > 5:
+        if self.pix_id == 5:
             self.ser.pause_flag = 0
             
         #get j and i (row index, col index) from the current pix id
@@ -206,35 +212,62 @@ class ImageObject:
             line_change_flag = 1
         
         #get the value of the current pixel
-        pix_value = mean(self.im.getpixel((i,j)))
+        #uses the inverted image, or if inverted_flag set, the originale one.
+        if self.inverted_flag == 1:
+            pix_value = self.im.getpixel((i,j))
+        else:
+            pix_value = self.im_invert.getpixel((i,j))
         
-        #transform the pixel value int oprojecteur value
-        laser_pos = self.get_laser_pos(pix_value)
+        #Init the dictionnary with the move ID
+        data_to_send ={'ID': self.pix_id}
         
-        #calculates position in mm
-        x_pos = (i - self.width/2) * self.ratio_pix_mm
-        y_pos = (j - self.height/2) * self.ratio_pix_mm
+        if pix_value != self.pv_pix[2]:
+            #transform the pixel value into projecteur value
+            laser_pos = self.get_laser_pos(pix_value)
+            #Add to the dictionnary ofvalues to send.
+            data_to_send.update({'L': laser_pos})
         
-        #Transform this position into angle
-        x_pos, y_pos = self.get_angle_value((x_pos, y_pos))
+        #Tests the current i value against the previous one
+        if i != self.pv_pix[0]:
+            #calculates position in mm
+            x_pos = (i - self.half_width) * self.ratio_pix_mm
+            #Transform this position into angle
+            x_pos = self.get_angle_value(x_pos, 'x')
+            #Transform this angle into projector value
+            x_pos = self.get_serial_pos(x_pos, 'x')
+            #add do dict.
+            data_to_send.update({'X':x_pos})
         
-        #Transform this angle into projector value
-        x_pos, y_pos = self.get_serial_pos((x_pos, y_pos))
-        
+        #same for j
+        if j != self.pv_pix[1]:
+            y_pos = (j - self.half_height) * self.ratio_pix_mm
+            y_pos = self.get_angle_value(y_pos, 'y')
+            y_pos = self.get_serial_pos(y_pos, 'y')
+            data_to_send.update({'Y':y_pos})
+
         #Call the json_creator and add the line to buffer.
-        #If line_change_flag is set, create a json string for this mosition, laser cut, mode 0.
+        #If line_change_flag is set, create a json string for this position, laser cut, mode 0.
         if i == 0:
-            json_string = self.jsp.to_json(self.pix_id, x_pos, y_pos, 0, ImageObject.cfg.speed, 0)
+            data = data_to_send.copy()
+            data.pop('L', None)
+            data.update({'L':0})
+            json_string = self.jsp.to_json(data)
             self.data_buffer.append(json_string)
+            data_to_send.update({'speed':ImageObject.cfg.speed,'mode':self.mode})
+            
         # Current position. 
-        json_string = self.jsp.to_json(self.pix_id, x_pos, y_pos, laser_pos, ImageObject.cfg.speed, 1)
+        json_string = self.jsp.to_json(data_to_send)
         self.data_buffer.append(json_string)
+       
         # If end of line, first shut the laser out.
         if i == self.width - 1:
-            json_string = self.jsp.to_json(self.pix_id, x_pos, y_pos, 0, ImageObject.cfg.speed, 0)
+            data = {'ID':self.pix_id, 'L':0, 'mode':0}
+            json_string = self.jsp.to_json(data)
             self.data_buffer.append(json_string)
-            
-
+    
+        #records the pix position for next increment
+        self.pv_pix = (i, j, pix_value)
+        
         #increment the pixel id
         self.pix_id += 1
         

@@ -36,7 +36,7 @@ class Window:
         self.status_io = self.builder.get_object('status_3')
         self.window_debug = self.builder.get_object('window_debug')
         self.text_debug = self.builder.get_object('text_debug')
-        
+           
         #attach the toolbuttons. We need them to set sensitive them on and off
         self.toolbutton_open = self.builder.get_object('toolbutton_open')
         self.toolbutton_close = self.builder.get_object('toolbutton_close')
@@ -358,7 +358,7 @@ class Window:
         if self.im.open_file(self.window_file.get_filename()):
             self.window_main.set_sensitive(True)
             self.window_file.hide()
-            self.image.set_from_pixbuf(self.im.get_pixbuf())
+            self.update_image()
             self.image_dimensions.show()
             self.set_gui_group('open', True)
     
@@ -371,6 +371,11 @@ class Window:
     def on_window_file_key_press_event(self, widget, event):
         if event.keyval == Gdk.KEY_Return:
             self.on_file_ok_clicked(widget)
+    
+    #This functions just load again the image.
+    #Used if it has artefacts
+    def update_image(self, widget = None, event = None):
+        self.image.set_from_pixbuf(self.im.get_pixbuf())
     
     #Show / hide, activate / de-activate the GUI areas
     def set_gui_group(self, mode, state):

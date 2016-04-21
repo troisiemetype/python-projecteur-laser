@@ -521,6 +521,7 @@
                 <property name="margin_bottom">10</property>
                 <property name="stock">gtk-missing-image</property>
                 <property name="icon_size">5</property>
+                <signal name="button-press-event" handler="update_image" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>

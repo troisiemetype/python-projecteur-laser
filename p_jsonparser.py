@@ -9,9 +9,8 @@ class JsonParser(json.JSONEncoder, json.JSONDecoder):
         
     
     #This function creates a json string from the coordinates
-    def to_json(self, pix_id, x_pos, y_pos, l_pos, speed=200, mode = 0):
-        json_data = {"ID":pix_id,"X":x_pos,"Y":y_pos,"L":l_pos,"speed":speed,"mode":mode}
-        json_string = self.encode(json_data)
+    def to_json(self, data):
+        json_string = self.encode(data)
         json_string += '\n'
         return json_string
     
