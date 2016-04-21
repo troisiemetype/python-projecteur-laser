@@ -1,6 +1,5 @@
 from PIL import Image, ImageChops
 from math import *
-from statistics import mean
 
 #needed for creating the Gdk image file
 import array
@@ -56,6 +55,8 @@ class ImageObject:
         self.pix_id = 0
         self.cur_row = 0
         self.cur_col = 0
+        self.debut = 0
+        self.fin = 0
         self.mode = 1
         
         #Init/update the values from the settings
@@ -85,7 +86,7 @@ class ImageObject:
     #this function "closes" the file that was open.
     #It simply clears all the instance attributes.
     def close_file(self):
-        ImageObject.wm.status('fermée', 'file')
+        ImageObject.wm.status("Pas d'image chargée", 'file')
         for item in self.__dict__:
             self.__setattr__(item, None)
             
@@ -195,6 +196,7 @@ class ImageObject:
             self.update_max_size()
             self.update_ratio_pix_to_mm()
             self.ser.pause_flag = 1
+            self.debut = time()
             self.pv_pix = (None, None, None)
             ImageObject.wm.progress_compute.show()
             ImageObject.wm.status('Calcul en cours...')
@@ -228,22 +230,32 @@ class ImageObject:
             data_to_send.update({'L': laser_pos})
         
         #Tests the current i value against the previous one
+        #calcul is as follow:
+        #i = position
+        #L/2 = Width, or height
+        #ratio = ratio_pix_mm
+        #scan: scan angle max
+        #angle_value_max = the value for the projector that give the max angle
+        #calculates position from px to mm
+        #pos = (i - L/2) * ratio
+        #Transform this position into angle
+        #angle = atan(pos * tan(scan) / (L/2)))
+        #Transform this angle into projector value
+        #pos = int(angle_value_max * angle / scan)
+        #It factors as follow:
+        #pos = angle_value_max * atan(ratio * tan(scan)*((i / L/2) - 1)) / scan
         if i != self.pv_pix[0]:
-            #calculates position in mm
-            x_pos = (i - self.half_width) * self.ratio_pix_mm
-            #Transform this position into angle
-            x_pos = self.get_angle_value(x_pos, 'x')
-            #Transform this angle into projector value
-            x_pos = self.get_serial_pos(x_pos, 'x')
-            #add do dict.
-            data_to_send.update({'X':x_pos})
+            pos = self.angle_value_max *\
+                degrees(atan(self.ratio_pix_mm * self.tan_h_scan * ((i / self.half_width)-1))) /\
+                ImageObject.cfg.h_angle
+            data_to_send.update({'X':pos})
         
         #same for j
         if j != self.pv_pix[1]:
-            y_pos = (j - self.half_height) * self.ratio_pix_mm
-            y_pos = self.get_angle_value(y_pos, 'y')
-            y_pos = self.get_serial_pos(y_pos, 'y')
-            data_to_send.update({'Y':y_pos})
+            pos = self.angle_value_max *\
+               degrees(atan(self.ratio_pix_mm * self.tan_v_scan * ((j / self.half_width)-1))) /\
+               ImageObject.cfg.v_angle
+            data_to_send.update({'Y':pos})
 
         #Call the json_creator and add the line to buffer.
         #If line_change_flag is set, create a json string for this position, laser cut, mode 0.
@@ -278,9 +290,11 @@ class ImageObject:
         #if pix_id is greater than pix_qty, the whole image have been parsed.
         #set pix_id and compute_flag to 0, hide progress bar
         if self.pix_id >= self.pix_qty:
+            self.fin = time()
+            duree = self.fin - self.debut
             self.pix_id = 0
             self.compute_flag = 0
             self.computed_flag = 1
-            ImageObject.wm.status('Image calculée.')            
+            ImageObject.wm.status('Image calculée en %.3fs.'%duree)            
             ImageObject.wm.progress_compute.hide()
         return 1
