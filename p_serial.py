@@ -53,6 +53,7 @@ class SerialLink(serial.Serial):
         return list_port
     #This returns a list of the baudrates available (for the settings menu construction)
     def get_baudrates(self):
+        #TODO: try greater speed: 230400, 460800, 500000.
         tupl_baud = (300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200)
         return tupl_baud
     
@@ -109,6 +110,12 @@ class SerialLink(serial.Serial):
         #If the board hasn't asked for datas
         if self.send_ok_flag == 0:
             return
+        #Some things to do when sending begins.
+        if self.i == 0:
+            SerialLink.wm.set_gui_group('send', False)
+            SerialLink.wm.progress_total.show()
+
+            
         string_to_send = SerialLink.im.data_buffer[self.i]
       
         SerialLink.wm.debug_append('>>> ' + string_to_send)
@@ -133,10 +140,18 @@ class SerialLink(serial.Serial):
         if self.i >= len(SerialLink.im.data_buffer):
             self.send_flag = 0
             self.i = 0
+            SerialLink.wm.message_info("Exposition terminée")
         if self.stop_flag == 1:
             self.i = 0
             self.send_flag = 0
             self.stop_flag = 0
+            SerialLink.wm.message_info("Exposition interrompue par l'utilisateur")
+        #If self.send_flag == 0, sending is ended or stopped by user:
+        #Hide progres bar and re-enable toolbuttons
+        if self.send_flag == 0:
+            SerialLink.wm.set_gui_group('send', True)
+            SerialLink.wm.progress_total.hide()
+            
             
     #This function reads raw data from the board
     def read_data(self):
@@ -148,9 +163,8 @@ class SerialLink(serial.Serial):
         data = {}
         raw_data = self.readline()
         data = SerialLink.jsp.from_json(raw_data.decode('utf-8'))
-        #TODO: handle error raised by the json parser.
         if type(data) is not dict:
-            print('erreur transmise')
+            SerialLink.wm.status('Erreur de valeur')
             return
             
         send_flag = data.get('send')
@@ -159,10 +173,12 @@ class SerialLink(serial.Serial):
             
         progress = data.get('progress')
         if progress != None:
-            SerialLink.wm.progress_step.set_fraction(progress)
-            SerialLink.wm.progress_total.set_fraction(data.get('ID')/SerialLink.im.pix_qty)
+            SerialLink.wm.progress_total.set_text('pixel %s/%s'%(data.get('ID'),
+                                                 SerialLink.im.pix_qty))
+            SerialLink.wm.progress_total.set_fraction(data.get('ID')\
+                                                               /SerialLink.im.pix_qty)
 
         message = data.get('message')
         if message != None:
-            print(message)
+            SerialLink.wm.status(message)
         

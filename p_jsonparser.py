@@ -21,7 +21,6 @@ class JsonParser(json.JSONEncoder, json.JSONDecoder):
             dict_data = self.decode(json)
             return dict_data
         except ValueError as error:
-            print('value error')
             return error 
         
         

@@ -31,7 +31,9 @@ class Window:
         self.window_main = self.builder.get_object('windowMain')
         self.window_settings = self.builder.get_object('windowSettings')
         self.window_file = self.builder.get_object('windowFile')
-        self.statusbar = self.builder.get_object('statusbar1')
+        self.status_serial = self.builder.get_object('status_1')
+        self.status_file = self.builder.get_object('status_2')
+        self.status_io = self.builder.get_object('status_3')
         self.window_debug = self.builder.get_object('window_debug')
         self.text_debug = self.builder.get_object('text_debug')
         
@@ -106,10 +108,6 @@ class Window:
         
         self.progress_compute = self.builder.get_object('progress_compute')
         self.progress_total = self.builder.get_object('progress_total')
-        self.progress_step = self.builder.get_object('progress_step')
-
-        #creates a context id for the status bar
-        self.context_id = self.statusbar.get_context_id('status')
         
         self.port_list_ok = 0
         self.baud_list_ok = 0
@@ -228,7 +226,6 @@ class Window:
             return
         self.image.set_from_icon_name(Gtk.STOCK_MISSING_IMAGE, 6)
         self.image_dimensions.hide()
-        self.status('Image %s fermée'%self.im.uri)
         self.im.close_file()
         self.set_gui_group(open, False)
     
@@ -247,7 +244,7 @@ class Window:
         try:
             self.ser.open()
             self.set_gui_group('open', True)
-            self.status('Connecté à %s, baudrate: %s' %(self.ser.port, self.ser.baudrate))
+            self.status('Connecté à %s'%self.ser.port, 'serial')
         #else catch an exception and display an error message
         except SerialException:
             self.message_erreur('Erreur de connexion',
@@ -266,7 +263,7 @@ class Window:
         
         self.set_gui_group('open', False)
      
-        self.status('déconnecté')
+        self.status('déconnecté', 'serial')
     
     #Defines the function that launch/stops the calibration.
     def on_calibrate_toggle(self, widget):
@@ -284,12 +281,9 @@ class Window:
     #defines the compute function
     #TODO: find a way to de-activate groups when computing, but they re-activate when done
     def on_compute(self, widget):
-        self.progress_compute.show()
-        self.status('Calcul en cours...')
-        self.im.compute_flag = 1
-        
-        self.status('Image calculée, prête à être envoyée au projecteur.')
-        
+        if self.im.computed_flag == 1:
+            return
+        self.im.compute_flag = 1        
     
     #defines the function for sending data - Empty for now
     def on_send(self, widget):
@@ -298,12 +292,6 @@ class Window:
         else:
             self.im.compute_flag = 1
             self.ser.send_flag = 1
-            self.set_gui_group('send', False)
-            
-            self.progress_compute.show()
-            self.progress_total.show()
-            self.progress_step.show()            
-        
     
     #defines the function for pausing data
     def on_pause_toggle(self, widget):
@@ -316,7 +304,7 @@ class Window:
     def on_stop(self, widget):
         if self.ser.pause_flag == 1:
             self.toolbutton_pause.set_active(0)
-        self.set_gui_group('send', True)
+            self.ser.pause_flag == 0
         self.ser.stop_flag = 1
         #need to add a (call to a) method that init the laser on 0
     
@@ -373,7 +361,6 @@ class Window:
             self.image.set_from_pixbuf(self.im.get_pixbuf())
             self.image_dimensions.show()
             self.set_gui_group('open', True)
-            self.status('Image %s ouverte'%self.im.uri)
     
     #defines the function that handles openning file
     def on_file_cancel_clicked(self, widget):
@@ -406,6 +393,19 @@ class Window:
             self.support_dimensions.set_sensitive(state)
             self.image_dimensions.set_sensitive(state)
             
+    #defines the basic information message
+    def message_info(self, message='', secondary=None):
+        dialog = Gtk.MessageDialog(self.window_main, Gtk.DialogFlags.MODAL,
+                                          Gtk.MessageType.INFO, Gtk.ButtonsType.OK,
+                                          message)
+        if secondary != None:
+            dialog.format_secondary_text(secondary)
+        
+        self.window_main.set_sensitive(False)        
+        dialog.run()
+        dialog.destroy()
+        self.window_main.set_sensitive(True)
+
     #defines the basic error message
     def message_erreur(self, message='', secondary=None):
         dialog = Gtk.MessageDialog(self.window_main, Gtk.DialogFlags.MODAL,
@@ -434,9 +434,15 @@ class Window:
         return answer
             
     #defines the status update
-    def status(self, status):
-        self.statusbar.push(self.context_id, status)
-        self.debug_append('status: ' + status)
+    def status(self, status, n_status='io'):
+        if n_status == 'serial':
+            status_bar = self.status_serial
+        elif n_status == 'file':
+            status_bar = self.status_file
+        else:
+            status_bar = self.status_io
+            
+        status_bar.set_text(status)
         Gtk.main_iteration_do(False)
     
     #This function handles the debug printing

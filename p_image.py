@@ -42,7 +42,7 @@ class ImageObject:
         #Load the image, records its uri, get its size, create thumbnail
         self.im.load()
         self.uri = uri
-        self.width,self.height = self.im.size
+        self.width, self.height = self.im.size
         self.ratio = float(self.width/self.height)
         self.thumb = self.im.copy()
         self.thumb.thumbnail((450, int(450/self.ratio)))
@@ -51,14 +51,20 @@ class ImageObject:
         self.cur_row = 0
         self.cur_col = 0
         self.compute_flag = 0
+        self.computed_flag = 0
         self.line_change_flag = 0
         self.data_buffer = []
         self.calibration_buffer = []
+        self.name = self.uri.split('/')
+        self.name = self.name.pop()
+        ImageObject.wm.status('%s, %sx%s pixels'%(self.name,self.width, self.height),
+                              'file')
         return True
     
     #this function "closes" the file that was open.
     #It simply clears all the instance attributes of self.
     def close_file(self):
+        ImageObject.wm.status('fermée', 'file')
         for item in self.__dict__:
             self.__setattr__(item, None)
             
@@ -171,17 +177,22 @@ class ImageObject:
             
     #This computes a pixel of the picture, and append the value in a file
     #the main loop calls this on each iteration if the im.compute_flag is set
-    def compute_image(self, progressbar):
-        #TODO: verifies if computation has already been donne before.
-        #Do it only if settings have been changed.
+    def compute_image(self):
         #test the flag state before anything, return if 0
         if self.compute_flag != 1:
             return 0
+        #Test if it has already been computed since last settings change
+        if self.computed_flag == 1:
+            self.compute_flag = 0
+            return
         #if first iteration since flag was set, initialise some datas
         if self.pix_id == 0:
             self.update_max_size()
             self.update_ratio_pix_to_mm()
             self.ser.pause_flag = 1
+            ImageObject.wm.progress_compute.show()
+            ImageObject.wm.status('Calcul en cours...')
+            
         #Let the compute image run a few times before to enable serial sending.
         if self.pix_id > 5:
             self.ser.pause_flag = 0
@@ -228,12 +239,15 @@ class ImageObject:
         self.pix_id += 1
         
         #updates progressbar
-        progressbar.set_fraction(self.pix_id/self.pix_qty)
+        ImageObject.wm.progress_compute.set_text('calcul pixel %s/%s'%(self.pix_id,self.pix_qty))
+        ImageObject.wm.progress_compute.set_fraction(self.pix_id/self.pix_qty)
         
         #if pix_id is greater than pix_qty, the whole image have been parsed.
         #set pix_id and compute_flag to 0, hide progress bar
         if self.pix_id >= self.pix_qty:
             self.pix_id = 0
             self.compute_flag = 0
-            progressbar.hide()
+            self.computed_flag = 1
+            ImageObject.wm.status('Image calculée.')            
+            ImageObject.wm.progress_compute.hide()
         return 1

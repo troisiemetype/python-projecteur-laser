@@ -61,6 +61,6 @@ while wm.running == 1:
     Gtk.main_iteration_do(False)
     if ser.send_calibration():
         continue
-    im.compute_image(wm.progress_compute)
+    im.compute_image()
     ser.send_data()
-    ser.read_data() 
+    ser.read_data()
