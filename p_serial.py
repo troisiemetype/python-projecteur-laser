@@ -31,6 +31,7 @@ class SerialLink(serial.Serial):
         self.stop_flag = 0
         self.data_flag = 0
         self.send_ok_flag = 1
+        self.send_again_flag = 0
         self.i = 0
     
     #init the instance of the class with values comming from the config file
@@ -131,6 +132,15 @@ class SerialLink(serial.Serial):
        #If the board hasn't asked for datas
         if self.send_ok_flag == 0:
             return
+        #If their was a problem with the last string sent, send it again.
+        if self.send_again_flag == 1:
+            self.i -= 1
+            self.send_again_flag = 0
+            print(SerialLink.im.data_buffer[self.i-1])
+            print(SerialLink.im.data_buffer[self.i])
+            print(SerialLink.im.data_buffer[self.i+1])
+            
+            
         #Some things to do when sending begins.
         if self.i == 0:
             SerialLink.wm.set_gui_group('send', False)
@@ -157,16 +167,24 @@ class SerialLink(serial.Serial):
         except serial.SerialTimeoutException:
             print('timeout')
             return 1
-             
+        #Update the sending process at each new line
+        if self.i % (SerialLink.im.width +2):
+            SerialLink.wm.progress_total.set_fraction(self.i / SerialLink.im.pix_qty)
+        #Stop sending if we are at end of data_list.
         if self.i >= len(SerialLink.im.data_buffer):
             self.send_flag = 0
             self.i = 0
-            SerialLink.wm.message_info("Exposition terminée")
+            SerialLink.wm.message_info("Envoi terminé")
         #If self.send_flag == 0, sending is ended or stopped by user:
         #Hide progres bar and re-enable toolbuttons
         if self.send_flag == 0:
             SerialLink.wm.set_gui_group('send', True)
             SerialLink.wm.progress_total.hide()
+    
+    def send_cfg(self, var, value):
+        """Send a configuration value to the board."""
+        string_to_send = '$%s:%s\n'%(var, value)
+        self.write(string_to_send.encode('utf-8'))
             
             
     #This function reads raw data from the board
@@ -187,20 +205,26 @@ class SerialLink(serial.Serial):
         if type(data) is not dict:
             SerialLink.wm.status('Erreur de valeur')
             return
-            
+        
         send_flag = data.get('send')
         if send_flag == 1:
             self.send_ok_flag = 1
+        elif send_flag == 2:
+            self.send_again_flag = 1
+            self.send_ok_flag = 1
+            SerialLink.wm.status('Coordonnée envoyée à nouveau')
             
         progress = data.get('progress')
         if progress != None:
             percent = 100 * data.get('ID')/SerialLink.im.pix_qty
-            SerialLink.wm.progress_total.set_text('%2d%%/%s pixels'%(percent,
-                                                 SerialLink.im.pix_qty))
+            SerialLink.wm.progress_total.set_text('Insolation image: %2d%%'%(percent))
             SerialLink.wm.progress_total.set_fraction(data.get('ID')\
                                                                /SerialLink.im.pix_qty)
 
         message = data.get('message')
         if message != None:
             SerialLink.wm.status(message)
-        
+            
+        erreur = data.get('erreur')
+        if erreur != None:
+            print(erreur)

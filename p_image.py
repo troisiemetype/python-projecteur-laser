@@ -251,7 +251,7 @@ class ImageObject:
         
         if pix_value != self.pv_pix[2]:
             #transform the pixel value into projecteur value
-            laser_pos = self.get_laser_pos(pix_value)
+            laser_pos = floor(self.get_laser_pos(pix_value))
             #Add to the dictionnary ofvalues to send.
             data_to_send.update({'L': laser_pos})
         
@@ -271,16 +271,16 @@ class ImageObject:
         #It factors as follow:
         #pos = angle_value_max * atan(ratio * tan(scan)*((i / L/2) - 1)) / scan
         if i != self.pv_pix[0]:
-            pos = self.angle_value_max *\
+            pos = floor(self.angle_value_max *\
                 atan(self.ratio_pix_mm * self.tan_h_scan * ((i / self.half_width)-1)) /\
-                ImageObject.cfg.h_angle_rad
+                ImageObject.cfg.h_angle_rad)
             data_to_send.update({'X':pos})
         
         #same for j
         if j != self.pv_pix[1]:
-            pos = self.angle_value_max *\
+            pos = floor(self.angle_value_max *\
                atan(self.ratio_pix_mm * self.tan_v_scan * ((j / self.half_width)-1)) /\
-               ImageObject.cfg.v_angle_rad
+               ImageObject.cfg.v_angle_rad)
             data_to_send.update({'Y':pos})
 
         #Call the json_creator and add the line to buffer.
@@ -322,6 +322,7 @@ class ImageObject:
         if self.pix_id >= self.pix_qty:
             self.fin = time()
             duree = self.fin - self.debut
+            ImageObject.ser.send_cfg('size', self.pix_qty)
             self.pix_id = 0
             self.compute_flag = 0
             self.computed_flag = 1

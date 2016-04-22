@@ -36,7 +36,7 @@ wm.status('Liaison série initialisée')
 wm.ser = ser
 #updates the port list and the baudrate list used in settings window
 wm.update_port_list()
-wm.update_baudrate_list(ser.get_baudrates(), ser.baudrate)
+wm.update_baudrate_list()
 wm.cfg = cfg
 wm.set_serial_cfg()
 wm.set_cfg(cfg)
