@@ -12,6 +12,8 @@ from serial import SerialException
 
 #definition of main program window
 class Window:
+    """Handle the GUI.
+    Update fields, progress bars, handle buttons."""
     #These are the links to other class used by the main program.
     #These are class attributes
     ser = None
@@ -21,6 +23,7 @@ class Window:
     #construct the main window
     #connects the widget to the function they need
     def __init__(self):
+        """Init the object. Attach GUI widgets to instance attributes."""
         #set at 1 the var that traces if the program is running
         self.running = 1
         #construct the window from the glade file
@@ -118,7 +121,7 @@ class Window:
         
     #sets the cfg values from a serial object
     def set_serial_cfg(self):
-        #populates the settings menu with values from settings file
+        """Populate the setting menu with values from config object."""
         self.databits.set_text(str(self.ser.bytesize))
         self.parity.set_text(self.ser.parity)
         self.stopbits.set_text(str(self.ser.stopbits))
@@ -126,7 +129,7 @@ class Window:
     
     #sets the cfg values for the image
     def set_cfg(self, cfg):
-        
+        """Populate image values from config object."""        
         self.support_distance.set_text(str(cfg.distance))
         self.support_width.set_text(str(cfg.support_width))
         self.support_height.set_text(str(cfg.support_height))
@@ -138,7 +141,8 @@ class Window:
     #construct the port list.
     #called the first time the update_port_list() function is called
     def init_port_list(self):
-        #construct the port list    
+        """Construct the port list for settings menu.
+        """
         self.port.set_model(self.list_port)
         self.cell = Gtk.CellRendererText()
         self.port.pack_start(self.cell, True)
@@ -148,6 +152,7 @@ class Window:
 
     #construct the baudrate list    
     def init_baud_list(self):
+        """Construct the baudrate list for settings menu."""
         self.baudrate.set_model(self.list_baud)
         self.cell = Gtk.CellRendererText()
         self.baudrate.pack_start(self.cell, True)
@@ -157,27 +162,43 @@ class Window:
         
         
     #defines/update the list of available ports
-    def update_port_list(self, list_port, port=None):
+    def update_port_list(self):
+        """Update the port list.
+        Get available ports from serial object.
+        Presset current port if listed."""
+        list_port = self.ser.get_ports()
+        
+        #Creates an empty ListStore.
         self.list_port = Gtk.ListStore(int, str)
         self.active_port = 0
         i = 0
         for port in list_port:
-            print(port)
+            #Append the ports to the ListPort.
             self.list_port.append([i, port])
             if self.ser.port == port:
                 self.active_port = i
             i += 1
+        #Applies the model to the list.
         self.port.set_model(self.list_port)
         if self.port_list_ok == 0:
             self.init_port_list()
         self.status('Liste des ports mise à jour')
     
     #defines/update the list of availables baudrates
-    def update_baudrate_list(self, tupl_baud, baudrate=9600):
+    def update_baudrate_list(self):
+        """Update the baudrate list.
+        Get values from serial object.
+        Presset current port if listed.
+        Init list."""
+        tupl_baud = self.ser.get_baudrates()
+        baudrate = self.ser.baudrate
+        
+        #Creates an empty ListStore.
         self.list_baud = Gtk.ListStore(int)
         self.active_baudrate = 0
         i = 0
         for baudrate in tupl_baud:
+            #Append values to the ListStore.
             self.list_baud.append([baudrate])
             if baudrate == baudrate:
                 self.active_baudrate = i
@@ -188,6 +209,7 @@ class Window:
     #defines the funcion that records entry in the support field
     #just calls the cfg.update_support_cfg() function, that verifies the values passed.
     def on_support_activate(self, widget, attribute=None, event=None):
+        """Handle support area update. Verify values coherence."""
         answer = self.cfg.update_support_value(attribute, int(widget.get_text()))
         if answer != 0:
             self.message_erreur('Valeur maximale permise: %s'%answer,
@@ -197,6 +219,7 @@ class Window:
     #defines the funcion that records entry in the image field
     #Just calles the cfg function, that verifies values passed.
     def on_image_activate(self, widget, attribute):
+        """Handle image area update. Verify values coherence."""
         answer = self.cfg.update_image_value(attribute, int(widget.get_text()), self.im.ratio)
         if answer != 0:
             self.message_erreur ('Valeur maximale admise: %s'%answer,
@@ -206,10 +229,12 @@ class Window:
 
     #Defines the close/quit function for the main window
     def on_quit(self, widget):
+        """Main quit."""
         self.running = 0
         
     #defines the function for opening file
     def on_open(self, widget):
+        """Open a file. Show file selection window."""
         self.window_main.set_sensitive(False)
         self.window_file.show()
     
@@ -219,6 +244,7 @@ class Window:
     #sets the default icon in the image area,
     #and last, call the close_file() image function
     def on_close(self, widget):
+        """Close the openned file. Set back default image, call validation dialog"""
         if self.im.im == None:
             return
         answer = self.message_validation("Fermer l'image", 'Tous les réglages seront perdus')
@@ -231,11 +257,14 @@ class Window:
     
     #defines the function for preferences
     def on_settings(self, widget):
+        """Show settings window."""
         self.window_main.set_sensitive(False)
         self.window_settings.show()
     
     #defines how the connection is handled
     def on_connect(self, widget):
+        """Connect serial.
+        Handle already open, serial exception. Show status."""
         #Verifies that we're not already connected
         if self.ser.is_open:
             self.message_erreur('Vous êtes déja connecté')
@@ -252,6 +281,7 @@ class Window:
         
     #defines the function for disconnect
     def on_disconnect(self, widget):
+        """Disconnect serial. Call validation dialog, show status."""
         if not self.ser.is_open:
             self.message_erreur("Vous n'êtes pas connecté")
             return
@@ -267,6 +297,7 @@ class Window:
     
     #Defines the function that launch/stops the calibration.
     def on_calibrate_toggle(self, widget):
+        """Launch/stop calibration. Set flags and hide/show GUI areas."""
         #If the button is active, then start the calibration
         if widget.get_active():
             self.set_gui_group('compute', False)
@@ -281,12 +312,14 @@ class Window:
     #defines the compute function
     #TODO: find a way to de-activate groups when computing, but they re-activate when done
     def on_compute(self, widget):
+        """Launch image compute. Set flag if not computed yet."""
         if self.im.computed_flag == 1:
             return
         self.im.compute_flag = 1        
     
     #defines the function for sending data - Empty for now
     def on_send(self, widget):
+        """Launch serial sending. Set flags, also quit pause state."""
         if self.ser.pause_flag == 1:
             self.toolbutton_pause.set_active(0)
         else:
@@ -295,6 +328,7 @@ class Window:
     
     #defines the function for pausing data
     def on_pause_toggle(self, widget):
+        """Set/unset pause."""
         if widget.get_active():
             self.ser.pause_flag = 1
         else:
@@ -302,6 +336,7 @@ class Window:
     
     #defines the function for stopping data
     def on_stop(self, widget):
+        """Stop serial sending. Set flags, undo pause."""
         if self.ser.pause_flag == 1:
             self.toolbutton_pause.set_active(0)
             self.ser.pause_flag == 0
@@ -310,6 +345,7 @@ class Window:
     
     #defines the function that handle the debug button
     def on_debug_toggle(self, widget):
+        """Handle debug window."""
         if widget.get_active():
             self.debug_flag = 1
             self.window_debug.set_visible(True)
@@ -319,12 +355,14 @@ class Window:
     
     #defines the function for updating port list
     def on_button_scan_clicked(self, widget):
-        self.update_port_list(self.ser.get_ports(), self.ser.port)
+        """launch a scan of available ports."""
+        self.update_port_list()
         
      #Defines a function that stop delete events to don't kill the object.
      #Needed as without it, closing the window from the cross or using "escape"
      #will kill the object, and so it won't be reachable at next call
     def on_delete_event(self, widget, event):
+        """Catch a delete event of window, hide window, stop event propagation."""
         widget.hide()
         self.window_main.set_sensitive(True)
         return True
@@ -332,6 +370,9 @@ class Window:
     #defines the function for validating settings
     #TODO: find how to link it with the cfg save
     def on_settings_ok_clicked(self, widget):
+        """handle setting OK.
+        Update config object with new values. Hide window.
+        """
         #cfg.save()     
         tree_iter = self.port.get_active_iter()
         if tree_iter != None:
@@ -350,11 +391,14 @@ class Window:
         
     #defines the function for cancelling settings
     def on_settings_cancel_clicked(self, widget):
+        """Handle settings window cancel/delete/escape."""
         self.window_settings.hide()
         self.window_main.set_sensitive(True)
         
     #defines the function that handles opening file
     def on_file_ok_clicked(self, widget):
+        """Handle file openning.
+        Call the image object open method, set GUI."""
         if self.im.open_file(self.window_file.get_filename()):
             self.window_main.set_sensitive(True)
             self.window_file.hide()
@@ -364,21 +408,29 @@ class Window:
     
     #defines the function that handles openning file
     def on_file_cancel_clicked(self, widget):
+        """Handle file openning quit/cancel/escape."""
         self.window_file.hide()
         self.window_main.set_sensitive(True)
     
     #defines the function that handle return key on file openning
     def on_window_file_key_press_event(self, widget, event):
+        """Handle opening of a file by pressing Return."""
         if event.keyval == Gdk.KEY_Return:
             self.on_file_ok_clicked(widget)
     
     #This functions just load again the image.
     #Used if it has artefacts
     def update_image(self, widget = None, event = None):
+        """Update display image."""
         self.image.set_from_pixbuf(self.im.get_pixbuf())
     
     #Show / hide, activate / de-activate the GUI areas
     def set_gui_group(self, mode, state):
+        """Show/hide the GUI groups.
+        GUI groups are GUI areas that need to be show or hide accordingly to program state.
+        E.g. when sending, we don't want the file or the serial to be close,
+        or image size changed.
+        """
         if mode == 'open':
             if state == True:
                 if not self.ser.is_open or self.im.im is None:
@@ -400,6 +452,12 @@ class Window:
             
     #defines the basic information message
     def message_info(self, message='', secondary=None):
+        """Show a message info in a dialog.
+        If verbose is false, just send the message to status bar.
+        """        
+        if self.cfg.info_verbose == False:
+            self.status(message)
+            return
         dialog = Gtk.MessageDialog(self.window_main, Gtk.DialogFlags.MODAL,
                                           Gtk.MessageType.INFO, Gtk.ButtonsType.OK,
                                           message)
@@ -413,6 +471,12 @@ class Window:
 
     #defines the basic error message
     def message_erreur(self, message='', secondary=None):
+        """Show a message error in a dialog.
+        If verbose is false, just send the message to status bar.
+        """
+        if self.cfg.error_verbose == False:
+            self.status(message)
+            return
         dialog = Gtk.MessageDialog(self.window_main, Gtk.DialogFlags.MODAL,
                                           Gtk.MessageType.ERROR, Gtk.ButtonsType.OK,
                                           message)
@@ -427,6 +491,11 @@ class Window:
     
     #defines a dialog that display a message, and return a yes/no value
     def message_validation(self, message='', secondary=None):
+        """Show a message info in a dialog.
+        If verbose is false, just don't display the dialog and fake a click on OK.
+        """
+        if self.cfg.validation_verbose == False:
+            return -5
         dialog = Gtk.MessageDialog(self.window_main, Gtk.DialogFlags.MODAL,
                                              Gtk.MessageType.INFO, Gtk.ButtonsType.OK_CANCEL,
                                              message)
@@ -440,6 +509,7 @@ class Window:
             
     #defines the status update
     def status(self, status, n_status='io'):
+        """Display status. Split into one of the three status are given the status type."""
         if n_status == 'serial':
             status_bar = self.status_serial
         elif n_status == 'file':
@@ -452,6 +522,7 @@ class Window:
     
     #This function handles the debug printing
     def debug_append(self, message):
+        """Append message to the debug window."""
         if self.debug_flag == 0:
             return
         buffer = self.text_debug.get_buffer()

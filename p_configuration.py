@@ -5,8 +5,14 @@ from math import tan, degrees, radians
 
 #definition of the config parser class
 class Configuration:
+    """Deal with configuration parameters, read them from config file,
+    hold them and modify for other classes and save them if needed.
+    """
     #init function
     def __init__(self, cfg_file):
+        """Class initialisation.
+        Open config file, parse it, copy values into instance attribute.
+        """
         #Creation of the config object
         self.cfg_file = cfg_file
         self.config = configparser.ConfigParser()
@@ -23,6 +29,11 @@ class Configuration:
         self.timeout = self.config.getfloat('serial', 'timeout')
         self.xonxoff = self.config.getboolean('serial', 'flowcontrolxon')
         
+        #interface attributes
+        self.info_verbose = self.config.getboolean('interface', 'infoverbose')
+        self.error_verbose = self.config.getboolean('interface', 'errorverbose')
+        self.validation_verbose = self.config.getboolean('interface', 'validationverbose')
+        
         #image attributes
         self.height = self.config.getint('image', 'height')
         self.width = self.config.getint('image', 'width')
@@ -32,11 +43,15 @@ class Configuration:
         self.support_height = self.config.getint('image', 'support_height')
         self.h_angle = self.config.getint('image', 'h_angle')
         self.v_angle = self.config.getint('image', 'v_angle')
+        #Angle is converted to radians to speed up calculations
+        self.v_angle_rad = radians(self.v_angle)
+        self.h_angle_rad = radians(self.h_angle)
         
     
     #getter for serial cfg
     #construct a dictionnary with the values read in config file
     def get_serial_cfg(self):
+        """Build a dictionary out of serial config values. Return it."""
         cfg_dict = {'port': self.port, 'baudrate': self.baudrate, 'bytesize': self.databits,
                     'parity': self.parity, 'stopbits': self.stopbits, 'timeout': self.timeout, 
                     'xonxoff': self.xonxoff}
@@ -45,6 +60,7 @@ class Configuration:
     #getter for image cfg
     #construct a dictionnary with the values read in config file
     def get_image_cfg(self):
+        """Build a dictionary out of image config values. Return it."""
         cfgdict = {'ditance':self.distance, 'support_width':self.support_width,
                    'support_height':self.support_height, 'speed':self.speed,
                    'width':self.width, 'height':self.height,
@@ -54,6 +70,7 @@ class Configuration:
     #defines the function that update the cfg support values from the Gtk entries
     #before to update it verifies that the values are correct
     def update_support_value(self, attribute, value):
+        """Update the GUI support values. Verify coherence."""
         if attribute == 'distance':
             self.distance = value
             max_width = int(2 * value * tan(radians(self.h_angle)))
@@ -85,6 +102,7 @@ class Configuration:
     #defines the function that update the cfg image values from the Gtk entries
     #before to update it verifies that the values are correct
     def update_image_value(self, attribute, value, ratio):
+        """Update the GUI image values. Verify coherence."""
         if attribute == 'image_width':
             #tests that value is less than the support
             if value > self.support_width:
@@ -105,5 +123,6 @@ class Configuration:
     
     #definition of the save function
     def save(self):
+        """Save current config to a file"""
         with open('config_copie.cfg', 'w') as configfile:
             self.config.write(configfile)

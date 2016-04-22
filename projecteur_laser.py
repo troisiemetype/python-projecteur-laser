@@ -35,7 +35,7 @@ wm.status('Liaison série initialisée')
 #sets a link to the SerialLink object ser, so that vm can use it
 wm.ser = ser
 #updates the port list and the baudrate list used in settings window
-wm.update_port_list(ser.get_ports(), ser.port)
+wm.update_port_list()
 wm.update_baudrate_list(ser.get_baudrates(), ser.baudrate)
 wm.cfg = cfg
 wm.set_serial_cfg()

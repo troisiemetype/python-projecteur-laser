@@ -15,6 +15,7 @@ from gi.repository import Gtk
 from time import sleep, time
 
 class ImageObject:
+    """Hold the image. Open it, close it, calculate coordinates."""
     #This three are links to other class used by the main program.
     #These are class attributes.
     #That way when lcosing a file, attributes are cleared but those stays
@@ -24,6 +25,7 @@ class ImageObject:
     wm = None
     #this function initiate the class
     def __init__(self):
+        """Initialisate class. Set used values to None"""
         self.uri = None
         self.im = None
         self.thumb = None
@@ -33,6 +35,13 @@ class ImageObject:
     #it tries to open the file that URI points on, gives false if it can't
     #Then computes the thumbnail so that it can be used when needed
     def open_file(self, uri):
+        """Open a file.
+        Verify the format.
+        Get size, create thumbnail.
+        Calculate black and white and inverted.
+        Set values used for computing, flags and buffers.
+        Print informations to GUI.
+        """
         #try to open the file, else give an Error message
         try:
             self.im = Image.open(uri)
@@ -62,8 +71,8 @@ class ImageObject:
         #Init/update the values from the settings
         self.half_width = self.width / 2
         self.half_height = self.height / 2
-        self.tan_h_scan = tan(radians(ImageObject.cfg.h_angle))
-        self.tan_v_scan = tan(radians(ImageObject.cfg.v_angle))
+        self.tan_h_scan = tan(ImageObject.cfg.h_angle_rad)
+        self.tan_v_scan = tan(ImageObject.cfg.v_angle_rad)
         #sets the max angle increment (half of 16 bits)
         self.angle_value_max = 2**15
         
@@ -86,12 +95,16 @@ class ImageObject:
     #this function "closes" the file that was open.
     #It simply clears all the instance attributes.
     def close_file(self):
+        """Close the file. Print info to GUI, clear instance attributes."""
         ImageObject.wm.status("Pas d'image chargée", 'file')
         for item in self.__dict__:
             self.__setattr__(item, None)
             
     #this function converts PIL images to Pixbuf format for displaying in Gtk
     def get_pixbuf(self):
+        """Compute pixbuf for GUI display. Convert the thumbnail to byte array,
+        look if it has a alpha layer, create a Gdkixbuf object.
+        """
         #transforms the given image into an array of pixels
         arr = array.array('B', self.thumb.tobytes())
         w,h = self.thumb.size
@@ -110,6 +123,7 @@ class ImageObject:
     #This function updates the values  
     #this function calculates the max size, according to the distance of the support
     def update_max_size(self):
+        """Update the max size values according to the distance value."""
         #h_angle & v_angle in degrees, length in mm
         #2 * distance * tan(angle balayage)
         self.max_width = int(2 * ImageObject.cfg.distance * self.tan_h_scan)
@@ -118,6 +132,7 @@ class ImageObject:
     
     #This function transformates the size in pixels into millimeters
     def update_ratio_pix_to_mm(self):
+        """Update the ratio from pix to mm."""
         #depending of the orientation of the picture, we take the biggest size to minimize rouding errors.
         if self.ratio > 1:
             self.ratio_pix_mm = ImageObject.cfg.width / self.width
@@ -129,6 +144,7 @@ class ImageObject:
     #So it can hold negative values. In fact it does, half the time.
     #the angle returned is in radians
     def get_angle_value(self, pos, axe):
+        """Compute the angle from a mm value."""
         #sets the angle value
         #angle = atan(support width * tan(angle balayage))/max width  
         if axe == 'x':
@@ -138,17 +154,19 @@ class ImageObject:
                  
     #This function calculates the position to send to the projector, given the angle
     def get_serial_pos(self, angle, axe):
+        """Compute the projector position from an angle."""
                 
         #calculates the angle ratio between the current value and the max value
         if axe == 'x':
-            angle_ratio = degrees(angle) / ImageObject.cfg.h_angle
+            angle_ratio = angle / ImageObject.cfg.h_angle_rad
         elif axe == 'y':
-            angle_ratio = degrees(angle) / ImageObject.cfg.v_angle
+            angle_ratio = angle / ImageObject.cfg.v_angle_rad
         #then calculates the final angle value, using the max value and the ratio
         return int(self.angle_value_max * angle_ratio)
 
     
     def get_laser_pos(self, value):
+        """Compute the laser pos according to pix value."""
         #sets the max value (16 bits)
         value_max = 2**16
         
@@ -159,6 +177,10 @@ class ImageObject:
     #TODO: add a cfg parameter for the laser intensity during calibrating
     #TODO: modify the call to jsonparser, to send a dictionnary instead of several values.
     def calibrate(self):
+        """Populate the calibration buffer.
+        Compute angle, then projector pos, from support size.
+        call the json parser to get json string.
+        """
         #get max size
         self.update_max_size()
         #get angle for this position
@@ -184,6 +206,14 @@ class ImageObject:
     #This computes a pixel of the picture, and append the value in a file
     #the main loop calls this on each iteration if the im.compute_flag is set
     def compute_image(self):
+        """Create and populate the data buffer for the image.
+        Test flags.
+        Init the function, show progress bar, write state to GUI.
+        Compute laser, X and Y if different from previous value.
+        Call json parser to get data string. Add it to buffer.
+        Handle end of line and new line.
+        When image processed, set back state for next compute.
+        """
         #test the flag state before anything, return if 0
         if self.compute_flag != 1:
             return 0
@@ -208,11 +238,7 @@ class ImageObject:
         #get j and i (row index, col index) from the current pix id
         j = floor(self.pix_id / self.width)
         i = self.pix_id % self.width
-        
-        #detect and of a line, to manage the line change
-        if i == self.width - 1:
-            line_change_flag = 1
-        
+                
         #get the value of the current pixel
         #uses the inverted image, or if inverted_flag set, the originale one.
         if self.inverted_flag == 1:
@@ -246,15 +272,15 @@ class ImageObject:
         #pos = angle_value_max * atan(ratio * tan(scan)*((i / L/2) - 1)) / scan
         if i != self.pv_pix[0]:
             pos = self.angle_value_max *\
-                degrees(atan(self.ratio_pix_mm * self.tan_h_scan * ((i / self.half_width)-1))) /\
-                ImageObject.cfg.h_angle
+                atan(self.ratio_pix_mm * self.tan_h_scan * ((i / self.half_width)-1)) /\
+                ImageObject.cfg.h_angle_rad
             data_to_send.update({'X':pos})
         
         #same for j
         if j != self.pv_pix[1]:
             pos = self.angle_value_max *\
-               degrees(atan(self.ratio_pix_mm * self.tan_v_scan * ((j / self.half_width)-1))) /\
-               ImageObject.cfg.v_angle
+               atan(self.ratio_pix_mm * self.tan_v_scan * ((j / self.half_width)-1)) /\
+               ImageObject.cfg.v_angle_rad
             data_to_send.update({'Y':pos})
 
         #Call the json_creator and add the line to buffer.
@@ -266,6 +292,13 @@ class ImageObject:
             json_string = self.jsp.to_json(data)
             self.data_buffer.append(json_string)
             data_to_send.update({'speed':ImageObject.cfg.speed,'mode':self.mode})
+            
+            #updates progressbar
+            percent = int((self.pix_id / self.pix_qty) * 100)
+            ImageObject.wm.progress_compute.set_text('calcul image: %s%%'
+                                                     %(percent))
+            ImageObject.wm.progress_compute.set_fraction(self.pix_id/self.pix_qty)
+            
             
         # Current position. 
         json_string = self.jsp.to_json(data_to_send)
@@ -283,9 +316,6 @@ class ImageObject:
         #increment the pixel id
         self.pix_id += 1
         
-        #updates progressbar
-        ImageObject.wm.progress_compute.set_text('calcul pixel %s/%s'%(self.pix_id,self.pix_qty))
-        ImageObject.wm.progress_compute.set_fraction(self.pix_id/self.pix_qty)
         
         #if pix_id is greater than pix_qty, the whole image have been parsed.
         #set pix_id and compute_flag to 0, hide progress bar
