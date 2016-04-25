@@ -65,3 +65,4 @@ while wm.running == 1:
     im.compute_image()
     ser.send_data()
     ser.read_data()
+    ser.parse_data()
