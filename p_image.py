@@ -58,6 +58,9 @@ class ImageObject:
         #Compute black and white and inverted image
         self.im = self.im.convert('L')
         self.im_invert = ImageChops.invert(self.im)
+        #Create byte array from this images.
+        self.im_bytes = array.array('B', self.im.tobytes())
+        self.im_invert_bytes = array.array('B', self.im_invert.tobytes())
         
         #Init the values used in the calc 'loops'.
         self.pix_qty =  self.width * self.height
@@ -223,16 +226,21 @@ class ImageObject:
             return
         #if first iteration since flag was set, initialise some datas
         if self.pix_id == 0:
+            #get updated values for the picure.
             self.update_max_size()
             self.update_ratio_pix_to_mm()
+            #pause sending to let the data_buffer be populated enough.
             self.ser.pause_flag = 1
+            #Get the current ime to final compute time.
             self.debut = time()
+            #Create a reminder of the previous pix value.
             self.pv_pix = (None, None, None)
+            #Set GUI.
             ImageObject.wm.progress_compute.show()
             ImageObject.wm.status('Calcul en cours...')
             
         #Let the compute image run a few times before to enable serial sending.
-        if self.pix_id == 5:
+        if self.pix_id == 50:
             self.ser.pause_flag = 0
             
         #get j and i (row index, col index) from the current pix id
@@ -242,9 +250,9 @@ class ImageObject:
         #get the value of the current pixel
         #uses the inverted image, or if inverted_flag set, the originale one.
         if self.inverted_flag == 1:
-            pix_value = self.im.getpixel((i,j))
+            pix_value = self.im_bytes[self.pix_id]
         else:
-            pix_value = self.im_invert.getpixel((i,j))
+            pix_value = self.im_invert_bytes[self.pix_id]
         
         #Init the dictionnary with the move ID
         data_to_send ={'ID': self.pix_id}
