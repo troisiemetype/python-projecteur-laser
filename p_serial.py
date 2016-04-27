@@ -141,8 +141,8 @@ class SerialLink(serial.Serial):
             return
         
         #If no data is asked by projector, return.
-        #if self.send_ok_flag == 0:
-            #return
+        if self.send_ok_flag == 0:
+            return
         
         #First iteration: some things to set.
         if self.i == 0:

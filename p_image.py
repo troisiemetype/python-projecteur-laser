@@ -126,28 +126,26 @@ class ImageObject:
     #This function updates the values  
     #this function calculates the max size, according to the distance of the support
     def update_max_size(self):
-        """Update the max size values according to the distance value."""
+        """Update the max size values according to the distance value and angle set in config file."""
         #h_angle & v_angle in degrees, length in mm
         #2 * distance * tan(angle balayage)
         self.max_width = int(2 * ImageObject.cfg.distance * self.tan_h_scan)
         self.max_height = int(2 * ImageObject.cfg.distance * self.tan_v_scan)
         return self.max_width, self.max_height
     
-    #This function transformates the size in pixels into millimeters
     def update_ratio_pix_to_mm(self):
-        """Update the ratio from pix to mm."""
+        """Update the ratio from pix to mm.
+        This is the ratio that links size in px to size in mm. equivalent to resolution."""
         #depending of the orientation of the picture, we take the biggest size to minimize rouding errors.
         if self.ratio > 1:
             self.ratio_pix_mm = ImageObject.cfg.width / self.width
         else:
             self.ratio_pix_mm = ImageObject.cfg.height / self.height
     
-    #This function get the angle value from the millimeters value
-    #the pos argument is the position, in mm, from center.
-    #So it can hold negative values. In fact it does, half the time.
-    #the angle returned is in radians
     def get_angle_value(self, pos, axe):
-        """Compute the angle from a mm value."""
+        """Compute the angle from a mm value.
+        The pos argument is the position, in millimeters, from image center.
+        So it can be negative if the pos is left from center."""
         #sets the angle value
         #angle = atan(support width * tan(angle balayage))/max width  
         if axe == 'x':
@@ -155,7 +153,6 @@ class ImageObject:
         if axe == 'y':
             return atan(pos * self.tan_v_scan / self.half_height)
                  
-    #This function calculates the position to send to the projector, given the angle
     def get_serial_pos(self, angle, axe):
         """Compute the projector position from an angle."""
                 
@@ -167,6 +164,9 @@ class ImageObject:
         #then calculates the final angle value, using the max value and the ratio
         return int(self.angle_value_max * angle_ratio)
 
+    def get_speed(self):
+        """Compute the angle increment corresponding to the wanted speed."""
+        pass
     
     def get_laser_pos(self, value):
         """Compute the laser pos according to pix value."""
