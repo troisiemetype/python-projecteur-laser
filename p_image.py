@@ -126,10 +126,11 @@ class ImageObject:
     def update_max_size(self):
         """Update the max size values according to the distance value
         and angle set in config file."""
-        # h_angle & v_angle in degrees, length in mm
-        # 2 * distance * tan(angle balayage)
+        # 2 * distance * tan(angle scan)
         self.max_width = int(2 * ImageObject.cfg.distance * self.tan_h_scan)
         self.max_height = int(2 * ImageObject.cfg.distance * self.tan_v_scan)
+        self.half_max_width = self.max_width / 2
+        self.half_max_height = self.half_height / 2
         return self.max_width, self.max_height
     
     def update_ratio_pix_to_mm(self):
@@ -153,9 +154,9 @@ class ImageObject:
         # or:
         # angle = atan2(support width * tan(scan angle), max width)
         if axe == 'x':
-            return atan2(pos * self.tan_h_scan, self.half_width)
+            return atan2(pos * self.tan_h_scan, self.half_max_width)
         if axe == 'y':
-            return atan2(pos * self.tan_v_scan, self.half_height)
+            return atan2(pos * self.tan_v_scan, self.half_max_height)
                  
     def get_serial_pos(self, angle, axe):
         """Compute the projector position from an angle."""
@@ -230,9 +231,7 @@ class ImageObject:
         self.calibration_buffer.append(corner)
 
     # This computes a pixel of the picture, and append the value in a file
-    # the main loop calls this on each iteration if the im.compute_flag is set
-    # todo: finalize the speed calculation.
-    # todo: verify that position calculation is right. There seems to be values greater than expected.
+    # the main loop calls this on each iteration if the im.compute_flag is set.
     def compute_image(self):
         """Create and populate the data buffer for the image.
         Test flags.
@@ -249,7 +248,7 @@ class ImageObject:
         if self.computed_flag == 1:
             self.compute_flag = 0
             return
-        # if first iteration since flag was set, initialise some datas
+        # if first iteration since flag was set, initialise some data.
         if self.pix_id == 0:
             # get updated values for the picture.
             self.update_max_size()

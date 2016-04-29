@@ -61,14 +61,11 @@ wm.status('initialisation complète')
 # Main loop. Calls the window refresh on each iteration
 while wm.running == 1:
     Gtk.main_iteration_do(False)
-    if ser.send_calibration:
+    if ser.send_calibration():
         continue
 
-    compute = threading.Thread(target = im.compute_image)
-    send = threading.Thread(target = ser.send_data)
-    read = threading.Thread(target = ser.read_data)
-    parse = threading.Thread(target = ser.parse_data)
-    compute.start()
-    send.start()
-    read.start()
-    parse.start()
+    im.compute_image()
+    ser.send_data()
+    ser.read_data()
+    ser.parse_data()
+
