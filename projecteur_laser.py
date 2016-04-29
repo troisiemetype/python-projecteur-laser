@@ -5,6 +5,8 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+import threading
+
 # program classes (like includes)
 from p_configuration import Configuration as conf
 from p_serial import SerialLink as serial
@@ -59,9 +61,14 @@ wm.status('initialisation complète')
 # Main loop. Calls the window refresh on each iteration
 while wm.running == 1:
     Gtk.main_iteration_do(False)
-    if ser.send_calibration():
+    if ser.send_calibration:
         continue
-    im.compute_image()
-    ser.send_data()
-    ser.read_data()
-    ser.parse_data()
+
+    compute = threading.Thread(target = im.compute_image)
+    send = threading.Thread(target = ser.send_data)
+    read = threading.Thread(target = ser.read_data)
+    parse = threading.Thread(target = ser.parse_data)
+    compute.start()
+    send.start()
+    read.start()
+    parse.start()
