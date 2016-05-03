@@ -16,7 +16,7 @@ from time import sleep, time
 class SerialLink(serial.Serial):
     '''Handle the serial object. Define methods for sending data from image data buffer.'''
     # class attributes
-    im = None
+    fi = None
     jsp = None
     wm = None
     # init the class with the parent class constructor

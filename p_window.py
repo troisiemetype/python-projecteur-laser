@@ -17,7 +17,7 @@ class Window:
     #These are the links to other class used by the main program.
     #These are class attributes
     ser = None
-    im = None
+    fi = None
     cfg = None
     #Init function
     #construct the main window
@@ -239,7 +239,7 @@ class Window:
         self.window_file.show()
     
     #defines the function for closing file
-    #if self.im.im is notdefined, no image is active: return doing nothing
+    #if self.im.im is not defined, no image is active: return doing nothing
     #It asks if we want to close the image,
     #sets the default icon in the image area,
     #and last, call the close_file() image function
@@ -397,9 +397,9 @@ class Window:
         
     #defines the function that handles opening file
     def on_file_ok_clicked(self, widget):
-        """Handle file openning.
+        """Handle file opening.
         Call the image object open method, set GUI."""
-        if self.im.open_file(self.window_file.get_filename()):
+        if self.fi.open(self.window_file.get_filename()):
             self.window_main.set_sensitive(True)
             self.window_file.hide()
             self.update_image()

@@ -1,3 +1,5 @@
+#!/usr/bin/python3.4
+
 from PIL import Image, ImageChops
 from math import *
 
@@ -13,9 +15,9 @@ from time import sleep, time
 
 class ImageObject:
     """Hold the image. Open it, close it, calculate coordinates."""
-    # This three are links to other class used by the main program.
+    # This are links to other class used by the main program.
     # These are class attributes.
-    # That way when lcosing a file, attributes are cleared but those stays
+    # That way when closing a file, attributes are cleared but those stays
     ser = None
     cfg = None
     jsp = None
@@ -31,7 +33,7 @@ class ImageObject:
     # This function deals with opening a new file
     # it tries to open the file that URI points on, gives false if it can't
     # Then computes the thumbnail so that it can be used when needed
-    def open_file(self, uri):
+    def open(self, uri):
         """Open a file.
         Verify the format.
         Get size, create thumbnail.
@@ -311,7 +313,7 @@ class ImageObject:
 
             # Update speed for this position
             speed = floor(self.speed * (1 + (pos / 2**15)))
-            print(pos, speed)
+            #print(pos, speed)
 
             data_to_send.update({'speed': speed})
             # print(speed)

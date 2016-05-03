@@ -5,13 +5,11 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
-import threading
-
-# program classes (like includes)
 from p_configuration import Configuration as conf
 from p_serial import SerialLink as serial
 from p_window import Window as win
 from p_jsonparser import JsonParser as json
+from p_file import FileObject as file
 from p_image import ImageObject as image
 
 # instantiate classes,
@@ -47,14 +45,14 @@ jsp = json()
 serial.jsp = jsp
 
 # creates the imageObject class instance
-im = image()
-image.cfg = cfg
-image.jsp = jsp
-image.wm = wm
-image.ser = ser
+fi = file()
+file.cfg = cfg
+file.jsp = jsp
+file.wm = wm
+file.ser = ser
 # and attach it to the other objects
-serial.im = im
-wm.im = im
+serial.fi = fi
+wm.fi = fi
 wm.status("gestionnaire d'image créé")
 wm.status('initialisation complète')
 
@@ -64,7 +62,7 @@ while wm.running == 1:
     if ser.send_calibration():
         continue
 
-    im.compute_image()
+    fi.compute_file()
     ser.send_data()
     ser.read_data()
     ser.parse_data()
