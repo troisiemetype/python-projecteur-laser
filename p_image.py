@@ -311,7 +311,7 @@ class ImageObject:
 
             # Update speed for this position
             speed = floor(self.speed * (1 + (pos / 2**15)))
-            print(pos, speed)
+         #    print(pos, speed)
 
             data_to_send.update({'speed': speed})
             # print(speed)

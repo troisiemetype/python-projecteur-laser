@@ -149,7 +149,7 @@ class SerialLink(serial.Serial):
         string_to_send = SerialLink.im.data_buffer[self.i]
         #self.flush()
         self.write(string_to_send.encode('utf-8'))
-        #print(string_to_send)
+        print(string_to_send)
         
         self.send_ok_flag = 0
         self.i += 1
@@ -212,7 +212,7 @@ class SerialLink(serial.Serial):
             self.raw_data = ""
             print(data)
             
-            # Stop working if the data is not well formated.
+            # Stop working if the data is not well formatted.
             if type(data) is not dict:
                 SerialLink.wm.status('Erreur de valeur')
                 return
