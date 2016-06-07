@@ -186,7 +186,6 @@ class ImageObject:
     def calibrate(self):
         """Populate the calibration buffer.
         Compute angle, then projector pos, from support size.
-        call the json parser to get json string.
         """
         # get max size
         self.update_max_size()
@@ -200,34 +199,27 @@ class ImageObject:
         self.calibration_buffer = []
 
         # First corner.
-        calibration_data = {'ID': 0, 'X': -x_pos, 'Y': y_pos, 'L': 0, 'mode': 0}
-        corner = self.jsp.to_json(calibration_data)
+        corner = 'I%sX%sY%sL%sM%s'%(0, -x_pos, y_pos, 0, 0)
         self.calibration_buffer.append(corner)
         
         # Same place, light the laser
-        calibration_data['L'] = l_pos     
-        calibration_data['X'] = -calibration_data['X']
-        corner = self.jsp.to_json(calibration_data)
+        corner = 'I%sX%sY%sL%s' % (1, -x_pos, y_pos, l_pos)
         self.calibration_buffer.append(corner)
         
         # Second corner.
-        calibration_data['Y'] = -calibration_data['Y']        
-        corner = self.jsp.to_json(calibration_data)
+        corner = 'I%sX%sY%sL%s' % (2, x_pos, y_pos, l_pos)
         self.calibration_buffer.append(corner)
         
         #Third Corner.
-        calibration_data['X'] = -calibration_data['X']
-        corner = self.jsp.to_json(calibration_data)
+        corner = 'I%sX%sY%sL%s' % (3, x_pos, -y_pos, l_pos)
         self.calibration_buffer.append(corner)
         
         # Fourth corner.
-        calibration_data['Y'] = -calibration_data['Y']
-        corner = self.jsp.to_json(calibration_data)
+        corner = 'I%sX%sY%sL%s' % (4, -x_pos, -y_pos, l_pos)
         self.calibration_buffer.append(corner)
         
         # Shut the laser up.
-        calibration_data['L'] = 0
-        corner = self.jsp.to_json(calibration_data)
+        corner = 'I%sL%s' %(5, 0)
         self.calibration_buffer.append(corner)
 
     # This computes a pixel of the picture, and append the value in a file
@@ -237,7 +229,6 @@ class ImageObject:
         Test flags.
         Init the function, show progress bar, write state to GUI.
         Compute laser, X and Y if different from previous value.
-        Call json parser to get data string. Add it to buffer.
         Handle end of line and new line (laser stop, line change, laser on).
         When image processed, set back state for next compute.
         """
@@ -260,7 +251,7 @@ class ImageObject:
             # Get the current ime to final compute time.
             self.debut = time()
             # Create a reminder of the previous pix value.
-            self.pv_pix = (None, None, None)
+            self.pv_pix = [None, None, None]
             # Set GUI.
             ImageObject.wm.progress_compute.show()
             ImageObject.wm.status('Calcul en cours...')
@@ -282,13 +273,14 @@ class ImageObject:
             pix_value = self.im_invert_bytes[self.pix_id]
 
         # Init the dictionary with the move ID
-        data_to_send = {'ID': self.pix_id}
+        data_to_send = 'I%s'%self.pix_id
 
         if pix_value != self.pv_pix[2]:
+            self.pv_pix[2] = pix_value
             # transform the pixel value into projector value
             laser_pos = floor(self.get_laser_pos(pix_value))
             # Add to the dictionary of values to send.
-            data_to_send.update({'L': laser_pos})
+            data_to_send += 'L%s'%pix_value
 
         # Tests the current i value against the previous one
         # calculation is as follow:
@@ -304,34 +296,35 @@ class ImageObject:
         # Transform this angle into projector value
         # pos = int(angle_value_max * angle / scan)
         if i != self.pv_pix[0]:
+            self.pv_pix[0] = i
             pos = (i - self.half_width) * self.ratio_pix_mm
             alpha = self.get_angle_value(pos, 'x')
-            pos = self.get_serial_pos(alpha, 'x')
-            data_to_send.update({'X': pos})
+            x_pos = self.get_serial_pos(alpha, 'x')
+            data_to_send += 'X%s'%x_pos
 
             # Update speed for this position
             speed = floor(self.speed * (1 + (pos / 2**15)))
          #    print(pos, speed)
 
-            data_to_send.update({'speed': speed})
+            data_to_send += 'S%s'%speed
             # print(speed)
 
         # same for j
         if j != self.pv_pix[1]:
+            self.pv_pix[1] = j
             pos = (j - self.half_height) * self.ratio_pix_mm
             alpha = self.get_angle_value(pos, 'y')
-            pos = self.get_serial_pos(alpha, 'y')
-            data_to_send.update({'Y': pos})
+            y_pos = self.get_serial_pos(alpha, 'y')
+            data_to_send += 'Y%s'%y_pos
 
-        # Call the json_creator and add the line to buffer.
-        # If line_change_flag is set, create a json string for this position, laser cut, mode 0.
+        # If line_change_flag is set, create a data string for this position, laser cut, mode 0.
         if i == 0:
-            data = data_to_send.copy()
-            data.pop('L', None)
-            data.update({'L':0})
-            json_string = self.jsp.to_json(data)
-            self.data_buffer.append(json_string)
-            data_to_send.update({'speed':ImageObject.cfg.speed,'mode':self.mode})
+            data_to_send_0 = 'I%s' % self.pix_id
+            data_to_send_0 += 'L%s'%0
+            data_to_send_0 += 'X%sY%s'%(x_pos, y_pos)
+            data_to_send_0 += 'M%s'%0
+            data_to_send_0 += '\n'
+            self.data_buffer.append(data_to_send_0)
             
             # updates progressbar
             percent = int((self.pix_id / self.pix_qty) * 100)
@@ -340,19 +333,17 @@ class ImageObject:
             ImageObject.wm.progress_compute.set_fraction(self.pix_id/self.pix_qty)
             
             
-        # Current position. 
-        json_string = self.jsp.to_json(data_to_send)
-        self.data_buffer.append(json_string)
+        # Current position.
+        data_to_send += '\n'
+        self.data_buffer.append(data_to_send)
        
         # If end of line, first shut the laser out.
         if i == self.width - 1:
-            data = {'ID':self.pix_id, 'L':0, 'mode':0}
-            json_string = self.jsp.to_json(data)
-            self.data_buffer.append(json_string)
+            data = 'I%sL%sM%s'%(self.pix_id, 0, 0)
+            data += '\n'
+            self.data_buffer.append(data)
     
-        # records the pix position for next increment
-        self.pv_pix = (i, j, pix_value)
-        
+
         # increment the pixel id
         self.pix_id += 1
         
