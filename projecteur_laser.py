@@ -61,8 +61,7 @@ wm.status('initialisation complète')
 # Main loop. Calls the window refresh on each iteration
 while wm.running == 1:
     Gtk.main_iteration_do(False)
-    if ser.send_calibration():
-        continue
+    ser.send_calibration()
 
     im.compute_image()
     ser.send_data()

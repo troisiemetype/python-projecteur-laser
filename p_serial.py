@@ -113,7 +113,7 @@ class SerialLink(serial.Serial):
             if self.i > 4:
                 self.i = 1
         # Used in the main loop: squeeze following main loop is set to 1
-        return 0
+        return 1
     
     def send_data(self):
         """Send data to projector.
@@ -186,6 +186,7 @@ class SerialLink(serial.Serial):
         
         for i in range(nb_byte):
             raw_byte = self.read()
+            #print(raw_byte)
             if raw_byte == b'$':
                 self.data_type = 'cfg'
             if raw_byte == b'{':
@@ -242,7 +243,7 @@ class SerialLink(serial.Serial):
                 #print(erreur)
         else:
             data = self.raw_data.lstrip('$')
-            print(data)
+    #        print(data)
             self.raw_data = ''
             if data == 's':
                 self.send_ok_flag = 1

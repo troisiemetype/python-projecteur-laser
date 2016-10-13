@@ -5,6 +5,8 @@ from math import *
 import array
 
 # also needed for creating the Gdk image file
+import gi
+gi.require_version('GdkPixbuf', '2.0')
 from gi.repository import GdkPixbuf
 
 # needed for introducing pauses in the program
@@ -121,7 +123,6 @@ class ImageObject:
         return GdkPixbuf.Pixbuf.new_from_data(arr, GdkPixbuf.Colorspace.RGB,
                                               hasAlpha, 8, w, h, dist)
 
-    # This function updates the values
     # this function calculates the max size, according to the distance of the support
     def update_max_size(self):
         """Update the max size values according to the distance value
@@ -130,7 +131,7 @@ class ImageObject:
         self.max_width = int(2 * ImageObject.cfg.distance * self.tan_h_scan)
         self.max_height = int(2 * ImageObject.cfg.distance * self.tan_v_scan)
         self.half_max_width = self.max_width / 2
-        self.half_max_height = self.half_height / 2
+        self.half_max_height = self.max_height / 2
         return self.max_width, self.max_height
     
     def update_ratio_pix_to_mm(self):
@@ -300,11 +301,13 @@ class ImageObject:
             pos = (i - self.half_width) * self.ratio_pix_mm
             alpha = self.get_angle_value(pos, 'x')
             x_pos = self.get_serial_pos(alpha, 'x')
+            x_pos += 2**15
             data_to_send += 'X%s'%x_pos
 
             # Update speed for this position
-            speed = floor(self.speed * (1 + (pos / 2**15)))
-         #    print(pos, speed)
+            #speed = floor(self.speed * (1 + (pos / 2**15)))
+            speed = floor(ImageObject.cfg.speed)
+            #print(x_pos, speed)
 
             data_to_send += 'S%s'%speed
             # print(speed)
@@ -315,6 +318,7 @@ class ImageObject:
             pos = (j - self.half_height) * self.ratio_pix_mm
             alpha = self.get_angle_value(pos, 'y')
             y_pos = self.get_serial_pos(alpha, 'y')
+            y_pos += 2**15
             data_to_send += 'Y%s'%y_pos
 
         # If line_change_flag is set, create a data string for this position, laser cut, mode 0.
